@@ -4,10 +4,12 @@ Gestisce l'offuscamento con PyArmor, il packaging con PyInstaller,
 la creazione del setup con Inno Setup, il deploy su Netlify e il deploy locale su rete.
 """
 
+import ast
 import json
 import logging
 import os
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -29,12 +31,28 @@ import bump_version  # noqa: E402
 
 import version  # noqa: E402
 
+
+def ensure_config_json(destination_dir: Path) -> None:
+    """Copia config.json nel build, oppure scrive un template se manca nel progetto."""
+    destination = destination_dir / "config.json"
+    source = ROOT_DIR / "config.json"
+    if source.is_file():
+        shutil.copy(str(source), str(destination))
+        return
+    destination.write_text(json.dumps(DEFAULT_CONFIG, indent=4), encoding="utf-8")
+
 ENTRY_SCRIPT = "src/app_launcher.py"
 APP_NAME = "Intelleo PDF Splitter"
 APP_VERSION = version.__version__
 DIST_DIR = ROOT_DIR / "dist"
 OBF_DIR = DIST_DIR / "obfuscated"
 BUILD_LOG = "build_log.txt"
+DEFAULT_CONFIG = {
+    "classification_rules": [],
+    "tesseract_path": "",
+    "global_docs": 0,
+    "global_pages": 0,
+}
 
 # Netlify Configuration
 NETLIFY_SITE_NAME = "intelleo-pdf-splitter"
@@ -110,6 +128,32 @@ def verify_environment():
         log_and_print("WARNING: ISCC.exe not found!", "WARNING")
     return iscc_path
 
+def source_module_imports(source_root: Path) -> list[str]:
+    """Moduli importati dal sorgente, invisibili a PyInstaller dopo PyArmor."""
+    modules: set[str] = set()
+    for path in source_root.rglob("*.py"):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError):
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                modules.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                modules.add(node.module)
+    return sorted(modules)
+
+def copy_network_file(source: Path, destination: Path) -> None:
+    """Copia solo il contenuto sul percorso di rete.
+
+    shutil.copy2 aggiorna anche data e attributi. Su una share SMB questo
+    passo fallisce con WinError 5 dopo che il file è già stato scritto.
+    """
+    if destination.exists():
+        with suppress(OSError):
+            os.chmod(destination, stat.S_IWRITE | stat.S_IREAD)
+    shutil.copyfile(str(source), str(destination))
+
 def deploy_to_network(setup_dir, setup_filename):
     """Copia il setup sul percorso di rete riorganizzando la directory (Archivio)."""
     log_and_print("\n--- Step Extra: Deploying to Network Path (SyncroJob Style) ---")
@@ -139,12 +183,12 @@ def deploy_to_network(setup_dir, setup_filename):
         # 2. Copia nuovo setup
         dst_path = NETWORK_DEPLOY_PATH / setup_filename
         log_and_print(f"Copying new setup {setup_filename} to {NETWORK_DEPLOY_PATH}...")
-        shutil.copy2(str(setup_dir / setup_filename), str(dst_path))
+        copy_network_file(setup_dir / setup_filename, dst_path)
 
         # 3. Copia version.json aggiornato
         version_json_src = DIST_DIR / "deploy" / "version.json"
         if version_json_src.exists():
-            shutil.copy2(str(version_json_src), str(NETWORK_DEPLOY_PATH / "version.json"))
+            copy_network_file(version_json_src, NETWORK_DEPLOY_PATH / "version.json")
             log_and_print("SUCCESS: version.json updated on network")
 
         log_and_print("SUCCESS: Network deploy completed and reorganized.")
@@ -220,10 +264,13 @@ def build():
             "license_updater", "license_validator", "roi_utility", "version",
             "shared", "shared.constants", "shared.security_utils",
             "core", "gui",
-            runtime_dir
+            runtime_dir,
         ]
+        hidden.extend(source_module_imports(ROOT_DIR / "src"))
+        seen: set[str] = set()
         for h in hidden:
-            if h:
+            if h and h not in seen:
+                seen.add(h)
                 cmd_pyinstaller.append(f"--hidden-import={h}")
 
         cmd_pyinstaller.append(str(OBF_DIR / "app_launcher.py"))
@@ -231,9 +278,10 @@ def build():
 
         final_dist_path = DIST_DIR / APP_NAME
 
-        # Copia manuale di cartelle che PyInstaller potrebbe saltare o che servono esterne
-        if (OBF_DIR / "config.json").exists():
-            shutil.copy(str(OBF_DIR / "config.json"), str(final_dist_path / "config.json"))
+        # Copia manuale di cartelle che PyInstaller potrebbe saltare o che servono esterne.
+        # Inno Setup interrompe la compilazione se questo file manca.
+        if final_dist_path.is_dir():
+            ensure_config_json(final_dist_path)
         if (ROOT_DIR / "Tesseract-OCR").exists():
             shutil.copytree(str(ROOT_DIR / "Tesseract-OCR"), str(final_dist_path / "Tesseract-OCR"), dirs_exist_ok=True)
 

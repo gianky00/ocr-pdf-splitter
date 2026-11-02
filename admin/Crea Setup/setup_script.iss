@@ -75,11 +75,11 @@ Root: HKCU; Subkey: "Software\Classes\Directory\shell\IntelleoPDFSplitter\comman
 [Files]
 ; === CONFIGURATION FILE ===
 ; Installa nella cartella dell'applicazione (Fallback/Template per Admin)
-Source: "{#BuildDir}\config.json"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "{#BuildDir}\config.json"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist
 
 ; Installa nella cartella APPDATA dell'utente che esegue l'installazione (Priorità Utente)
 ; Nota: In installazioni amministrative, questo andrà nel profilo dell'Admin.
-Source: "{#BuildDir}\config.json"; DestDir: "{userappdata}\{#MyAppName}"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "{#BuildDir}\config.json"; DestDir: "{userappdata}\{#MyAppName}"; Flags: onlyifdoesntexist uninsneveruninstall skipifsourcedoesntexist
 
 ; === ESEGUIBILE E DIPENDENZE PYTHON (EXCLUDE CONFIG.JSON TO AVOID DUPLICATION/OVERWRITE) ===
 ; Excludes allows us to handle config.json separately above
