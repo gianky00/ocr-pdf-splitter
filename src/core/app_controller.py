@@ -97,11 +97,13 @@ class AppController(QObject):
         """Esegue un controllo online (run_update) della licenza."""
         try:
             import license_updater
+
             license_updater.run_update()
             self.check_license()
             return True
         except Exception as e:
             from license_updater import LicenseRevokedError
+
             if isinstance(e, LicenseRevokedError):
                 logger.critical(f"CONTROLLO ONLINE: LICENZA REVOCATA: {e}")
                 self.log_received.emit(str(e), "ERROR", False)
@@ -156,7 +158,7 @@ class AppController(QObject):
             odc=odc,
             config=self.config,
             log_queue=self.log_queue,
-            on_complete=on_worker_complete
+            on_complete=on_worker_complete,
         )
         self._current_worker.start()
         return True
@@ -214,6 +216,7 @@ class AppController(QObject):
     def check_roi_signal(self) -> bool:
         """Controlla se l'utility ROI ha inviato un segnale di aggiornamento regole."""
         from shared.constants import SIGNAL_FILE
+
         signal_path = Path(SIGNAL_FILE)
         if signal_path.exists():
             with suppress(OSError):

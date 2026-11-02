@@ -43,5 +43,6 @@ class TestConfigTab(unittest.TestCase):
         self.assertEqual(self.mock_main.rules_tree.columnCount(), 3)
         self.assertTrue(self.mock_main.keywords_text.isReadOnly())
 
+
 if __name__ == "__main__":
     unittest.main()

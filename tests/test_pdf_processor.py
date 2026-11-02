@@ -13,10 +13,7 @@ class TestPdfProcessor(unittest.TestCase):
 
     def setUp(self):
         """Setup common config and paths."""
-        self.config = {
-            "tesseract_path": "mock_tesseract.exe",
-            "classification_rules": []
-        }
+        self.config = {"tesseract_path": "mock_tesseract.exe", "classification_rules": []}
         self.pdf_path = "test.pdf"
         self.odc = "ODC123"
 
@@ -36,7 +33,7 @@ class TestPdfProcessor(unittest.TestCase):
     @patch("core.pdf_processor.Path.is_file")
     def test_process_pdf_success(self, mock_is_file, mock_fitz, mock_archive, mock_splitter, mock_analyzer, mock_ocr):
         """Test successful end-to-end processing flow."""
-        mock_is_file.return_value = True # Tesseract exists
+        mock_is_file.return_value = True  # Tesseract exists
 
         # Mock Analyzer
         mock_analyzer_inst = mock_analyzer.return_value
@@ -62,12 +59,15 @@ class TestPdfProcessor(unittest.TestCase):
 
     def test_process_pdf_cancel(self):
         """Test immediate cancellation."""
+
         def cancel_true():
             """Return True to simulate immediate cancellation."""
             return True
+
         success, msg, _gen, _moved = process_pdf(self.pdf_path, self.odc, self.config, cancel_check=cancel_true)
         self.assertFalse(success)
         self.assertEqual(msg, "Annullato")
+
 
 if __name__ == "__main__":
     unittest.main()

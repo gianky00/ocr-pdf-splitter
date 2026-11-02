@@ -73,9 +73,11 @@ class TestSessionManager(unittest.TestCase):
         self.session_path.write_text("invalid json", encoding="utf-8")
         # Avoid generic Exception for B017 if possible, or use a specific one
         from json.decoder import JSONDecodeError
+
         with self.assertRaises(JSONDecodeError):
             SessionManager.load_session()
         mock_log.assert_called()
+
 
 if __name__ == "__main__":
     unittest.main()

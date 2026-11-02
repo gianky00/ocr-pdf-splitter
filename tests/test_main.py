@@ -26,6 +26,8 @@ class TestMainApp(unittest.TestCase):
 
     def setUp(self) -> None:
         """Create window and controller mocks."""
+        self._testing_present = hasattr(sys, "_testing")
+        self._testing_value = getattr(sys, "_testing", None)
         # Patch dell'AppController per evitare effetti collaterali
         with patch("main.AppController") as mock_ctrl:
             self.mock_controller = mock_ctrl.return_value
@@ -57,6 +59,10 @@ class TestMainApp(unittest.TestCase):
     def tearDown(self) -> None:
         """Clean up window."""
         self.window.close()
+        if self._testing_present:
+            sys._testing = self._testing_value
+        elif hasattr(sys, "_testing"):
+            delattr(sys, "_testing")
 
     def test_initialization(self) -> None:
         """Test window title and initial state."""
@@ -93,7 +99,7 @@ class TestMainApp(unittest.TestCase):
             ("files_count_sess_label", "10"),
             ("files_count_tot_label", "100"),
             ("pages_count_sess_label", "50"),
-            ("pages_count_tot_label", "500")
+            ("pages_count_tot_label", "500"),
         ):
             widget = getattr(self.window, attr)
             if hasattr(widget, "text"):

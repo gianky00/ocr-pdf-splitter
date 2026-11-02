@@ -81,5 +81,6 @@ class TestUIFactory(unittest.TestCase):
         self.assertIsNotNone(found_label)
         row.deleteLater()
 
+
 if __name__ == "__main__":
     unittest.main()

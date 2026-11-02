@@ -18,6 +18,44 @@ from core.classifier import DocumentClassifier
 from core.ocr_engine import OcrEngine
 
 
+def _native_category(page: fitz.Page, roi_rect: fitz.Rect, category: str, keywords: list[str]) -> str | None:
+    """Restituisce la categoria se il testo nativo della ROI contiene una keyword."""
+    try:
+        native_text = page.get_text("text", clip=roi_rect).lower()
+    except Exception:
+        return None
+    if any(keyword in native_text for keyword in keywords):
+        return category
+    return None
+
+
+def _ocr_category(
+    page: fitz.Page,
+    roi_rect: fitz.Rect,
+    matrix: fitz.Matrix,
+    ocr_engine: OcrEngine,
+    category: str,
+    keywords: list[str],
+    *,
+    robust: bool,
+) -> str | None:
+    """Restituisce la categoria se l'OCR della ROI contiene una keyword."""
+    try:
+        pix = page.get_pixmap(matrix=matrix, colorspace=fitz.csGRAY, clip=roi_rect)
+        if 0 in (pix.width, pix.height):
+            return None
+        image = Image.frombytes("L", (pix.width, pix.height), pix.samples)
+        if robust:
+            found, _keyword = ocr_engine.robust_scan(image, keywords)
+            return category if found else None
+        text = ocr_engine.scan_image(image)
+    except Exception:
+        return None
+    if any(keyword in text for keyword in keywords):
+        return category
+    return None
+
+
 def _analyze_single_page_standalone(
     page: fitz.Page,
     rules: list[dict[str, Any]],
@@ -53,12 +91,9 @@ def _analyze_single_page_standalone(
     # --- STADIO 1: FAST PATH (Testo Nativo) ---
     for category, keywords, rois in compiled_rules:
         for roi_rect in rois:
-            try:
-                native_text = page.get_text("text", clip=roi_rect).lower()
-                if any(kw in native_text for kw in keywords):
-                    return category
-            except Exception:
-                continue
+            matched = _native_category(page, roi_rect, category, keywords)
+            if matched:
+                return matched
 
     # --- STADIO 2: OCR PER-ROI (Medium Path) ---
     # OCR su ciascuna ROI individualmente per massima precisione.
@@ -68,33 +103,17 @@ def _analyze_single_page_standalone(
 
     for category, keywords, rois in compiled_rules:
         for roi_rect in rois:
-            try:
-                pix = page.get_pixmap(matrix=mat, colorspace=fitz.csGRAY, clip=roi_rect)
-                if 0 in (pix.width, pix.height):
-                    continue
-                img = Image.frombytes("L", (pix.width, pix.height), pix.samples)
-
-                text = ocr_engine.scan_image(img)
-                if any(kw in text for kw in keywords):
-                    return category
-            except Exception:
-                continue
+            matched = _ocr_category(page, roi_rect, mat, ocr_engine, category, keywords, robust=False)
+            if matched:
+                return matched
 
     # --- STADIO 3: ROBUST PATH (Solo se il Medium Path fallisce) ---
     # Tentativo con trasformazioni (rotazioni, contrasto, binarizzazione) per-ROI.
     for category, keywords, rois in compiled_rules:
         for roi_rect in rois:
-            try:
-                pix = page.get_pixmap(matrix=mat, colorspace=fitz.csGRAY, clip=roi_rect)
-                if 0 in (pix.width, pix.height):
-                    continue
-                img = Image.frombytes("L", (pix.width, pix.height), pix.samples)
-
-                found, _keyword = ocr_engine.robust_scan(img, keywords)
-                if found:
-                    return category
-            except Exception:
-                continue
+            matched = _ocr_category(page, roi_rect, mat, ocr_engine, category, keywords, robust=True)
+            if matched:
+                return matched
 
     return "sconosciuto"
 

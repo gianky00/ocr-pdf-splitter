@@ -43,14 +43,10 @@ class TestPdfSplitter(unittest.TestCase):
     def test_split_and_save_success(self):
         """Test splitting and saving PDF pages."""
         doc = fitz.open(self.test_pdf_path)
-        page_groups = {
-            "CatA": [0, 1],
-            "CatB": [2],
-            "sconosciuto": [3, 4]
-        }
+        page_groups = {"CatA": [0, 1], "CatB": [2], "sconosciuto": [3, 4]}
         rules = [
             {"category_name": "CatA", "filename_suffix": "SUFFIX_A"},
-            {"category_name": "CatB"} # No suffix, should use category name
+            {"category_name": "CatB"},  # No suffix, should use category name
         ]
         output_dir = "."
         odc = "ODC999"
@@ -88,10 +84,11 @@ class TestPdfSplitter(unittest.TestCase):
         # but we can test that it returns True on normal save.
         res = PdfSplitter._safe_save(doc, "test_safe.pdf")
         self.assertTrue(res)
-        
+
         p = Path("test_safe.pdf")
         if p.exists():
             p.unlink()
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -31,6 +31,7 @@ class TestUnknownReview(unittest.TestCase):
         # Mock SessionManager to avoid file writes
         with patch("gui.dialogs.unknown_review.SessionManager"):
             from gui.dialogs.unknown_review import UnknownFilesReviewDialog
+
             self.dialog = UnknownFilesReviewDialog(None, self.tasks, odc="ODC123")
 
     def tearDown(self):
@@ -56,6 +57,7 @@ class TestUnknownReview(unittest.TestCase):
         with patch("gui.dialogs.unknown_review.SessionManager.save_session") as mock_save:
             self.dialog.close()
             mock_save.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

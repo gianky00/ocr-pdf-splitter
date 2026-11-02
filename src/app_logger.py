@@ -50,6 +50,7 @@ def save_bot_html(html_content: str, filename: str) -> str:
         _write_immediate(f"Errore salvataggio HTML bot: {e}")
         return ""
 
+
 # Variabile globale per tracciare lo stato
 _initialized = False
 _log_path = None
@@ -98,6 +99,39 @@ def get_app_directory():
     return str(Path(__file__).resolve().parent)
 
 
+def _try_open_append(directory: Path, filename: str):
+    """Apre un file di log in append. None se la directory non è scrivibile."""
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / filename
+        handle = path.open("a", encoding="utf-8", buffering=1)
+    except Exception:
+        return None
+    return path, handle
+
+
+def _write_crash_report(directory: Path, exc_type, exc_value, exc_traceback) -> bool:
+    """Scrive il report di crash. False se la directory non è scrivibile."""
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+        crash_file = directory / f"Crash_{datetime.now().strftime('%d_%m_%Y_%H%M%S')}.log"
+        with crash_file.open("w", encoding="utf-8") as handle:
+            handle.write(f"CRASH REPORT - {APP_NAME}\n")
+            handle.write(f"{'=' * 60}\n")
+            handle.write(f"Data/Ora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
+            handle.write(f"Python: {sys.version}\n")
+            handle.write(f"Frozen: {getattr(sys, 'frozen', False)}\n")
+            handle.write(f"Executable: {sys.executable}\n")
+            handle.write(f"Working Dir: {Path.cwd()}\n")
+            handle.write(f"{'=' * 60}\n\n")
+            handle.write("TRACEBACK:\n")
+            traceback.print_exception(exc_type, exc_value, exc_traceback, file=handle)
+        _write_immediate(f"Crash file scritto: {crash_file}")
+    except Exception:
+        return False
+    return True
+
+
 def setup_logging():
     """
     Configura il sistema di logging.
@@ -121,19 +155,16 @@ def setup_logging():
 
     # Prova a creare il file di log in una delle directory
     for try_dir in dirs_to_try:
-        try:
-            try_dir.mkdir(parents=True, exist_ok=True)
-            test_path = try_dir / log_filename
-            # Prova ad aprire il file per verificare i permessi
-            _immediate_log_file = test_path.open("a", encoding="utf-8", buffering=1)
-            actual_log_path = str(test_path)
-            _write_immediate(f"LOG FILE INIZIALIZZATO: {test_path}")
-            _write_immediate(f"Frozen: {getattr(sys, 'frozen', False)}")
-            _write_immediate(f"Executable: {sys.executable}")
-            _write_immediate(f"ROOT_DIR: {ROOT_DIR}")
-            break
-        except Exception:
+        opened = _try_open_append(try_dir, log_filename)
+        if opened is None:
             continue
+        test_path, _immediate_log_file = opened
+        actual_log_path = str(test_path)
+        _write_immediate(f"LOG FILE INIZIALIZZATO: {test_path}")
+        _write_immediate(f"Frozen: {getattr(sys, 'frozen', False)}")
+        _write_immediate(f"Executable: {sys.executable}")
+        _write_immediate(f"ROOT_DIR: {ROOT_DIR}")
+        break
 
     if actual_log_path is None:
         # Fallback estremo: scrivi nella temp
@@ -214,24 +245,8 @@ def setup_exception_handler():
         # Scrivi anche su file dedicato per crash
         crash_dirs = [Path(get_log_directory()), Path(get_app_directory()), Path.home()]
         for crash_dir in crash_dirs:
-            try:
-                crash_dir.mkdir(parents=True, exist_ok=True)
-                crash_file = crash_dir / f"Crash_{datetime.now().strftime('%d_%m_%Y_%H%M%S')}.log"
-                with crash_file.open("w", encoding="utf-8") as f:
-                    f.write(f"CRASH REPORT - {APP_NAME}\n")
-                    f.write(f"{'=' * 60}\n")
-                    f.write(f"Data/Ora: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n")
-                    f.write(f"Python: {sys.version}\n")
-                    f.write(f"Frozen: {getattr(sys, 'frozen', False)}\n")
-                    f.write(f"Executable: {sys.executable}\n")
-                    f.write(f"Working Dir: {Path.cwd()}\n")
-                    f.write(f"{'=' * 60}\n\n")
-                    f.write("TRACEBACK:\n")
-                    traceback.print_exception(exc_type, exc_value, exc_traceback, file=f)
-                _write_immediate(f"Crash file scritto: {crash_file}")
+            if _write_crash_report(crash_dir, exc_type, exc_value, exc_traceback):
                 break
-            except Exception:
-                continue
 
     sys.excepthook = exception_handler
 

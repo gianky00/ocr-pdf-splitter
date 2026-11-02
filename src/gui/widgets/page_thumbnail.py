@@ -22,7 +22,9 @@ class PageThumbnail(QWidget):
         self.main_layout.setContentsMargins(5, 5, 5, 5)
 
         self.img_label = QLabel()
-        self.img_label.setPixmap(pixmap.scaled(150, 200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        self.img_label.setPixmap(
+            pixmap.scaled(150, 200, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        )
         self.img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.img_label.setStyleSheet("border: 2px solid transparent; border-radius: 4px;")
 
@@ -51,7 +53,9 @@ class PageThumbnail(QWidget):
             self.selected = not self.selected
 
         if self.selected:
-            self.img_label.setStyleSheet("border: 3px solid #0D6EFD; border-radius: 4px; background-color: rgba(13, 110, 253, 0.1);")
+            self.img_label.setStyleSheet(
+                "border: 3px solid #0D6EFD; border-radius: 4px; background-color: rgba(13, 110, 253, 0.1);"
+            )
             self.info_label.setStyleSheet("font-size: 10px; color: #0D6EFD; font-weight: bold;")
         else:
             self.img_label.setStyleSheet("border: 2px solid transparent; border-radius: 4px;")

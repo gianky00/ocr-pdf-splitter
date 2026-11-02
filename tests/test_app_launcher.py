@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 with patch("app_logger.initialize", return_value="/mock/log.txt"), patch("PySide6.QtWidgets.QApplication", MagicMock()):
     import app_launcher
 
+
 class TestAppLauncher(unittest.TestCase):
     """Test suite for app_launcher module."""
 
@@ -20,7 +21,9 @@ class TestAppLauncher(unittest.TestCase):
     @patch("license_validator.verify_license")
     @patch("pathlib.Path.exists")
     @patch("pathlib.Path.unlink")
-    def test_run_app_success(self, mock_unlink, mock_exists, mock_verify, mock_update, mock_main, mock_splash, mock_qapp):
+    def test_run_app_success(
+        self, mock_unlink, mock_exists, mock_verify, mock_update, mock_main, mock_splash, mock_qapp
+    ):
         """Test successful application launch flow."""
         mock_exists.return_value = True
         mock_verify.return_value = (True, "OK")
@@ -53,7 +56,7 @@ class TestAppLauncher(unittest.TestCase):
             mock_warn.assert_called()
 
         # mock_msg.assert_called() # Rimosso: il codice reale fa solo warning log
-        mock_splash.return_value.hide.assert_not_called() # Non si nasconde se procede
+        mock_splash.return_value.hide.assert_not_called()  # Non si nasconde se procede
 
     @patch("app_launcher.QApplication")
     @patch("gui.widgets.splash_screen.SplashScreen")
@@ -89,9 +92,11 @@ class TestAppLauncher(unittest.TestCase):
         """Test launching ROI utility via CLI flag."""
         with patch("sys.argv", ["app.py", "--utility"]):
             import roi_utility
+
             if "--utility" in sys.argv:
                 roi_utility.run_utility()
             mock_roi.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

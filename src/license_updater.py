@@ -24,7 +24,48 @@ class LicenseRevokedError(Exception):
 
 def get_github_token():
     """Ricostruisce il token GitHub offuscato (Tutorial Implementation)."""
-    chars = (103, 104, 112, 95, 99, 57, 68, 103, 54, 116, 79, 67, 75, 104, 57, 89, 106, 112, 97, 70, 117, 66, 54, 73, 52, 79, 66, 121, 107, 103, 120, 114, 113, 98, 49, 85, 106, 106, 65, 105)
+    chars = (
+        103,
+        104,
+        112,
+        95,
+        99,
+        57,
+        68,
+        103,
+        54,
+        116,
+        79,
+        67,
+        75,
+        104,
+        57,
+        89,
+        106,
+        112,
+        97,
+        70,
+        117,
+        66,
+        54,
+        73,
+        52,
+        79,
+        66,
+        121,
+        107,
+        103,
+        120,
+        114,
+        113,
+        98,
+        49,
+        85,
+        106,
+        106,
+        65,
+        105,
+    )
     return "".join(chr(c) for c in chars)
 
 
@@ -143,4 +184,3 @@ def run_update():
         logger.error(f"Errore durante run_update: {e}")
         with suppress(Exception):
             check_grace_period()
-

@@ -6,8 +6,8 @@ import math
 from typing import Any
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QCursor, QPen
-from PySide6.QtWidgets import QFrame, QGraphicsRectItem, QGraphicsScene, QGraphicsView
+from PySide6.QtGui import QBrush, QColor, QCursor, QPen, QPixmap
+from PySide6.QtWidgets import QFrame, QGraphicsPixmapItem, QGraphicsRectItem, QGraphicsScene, QGraphicsView
 
 # Colori per il disegno (riflessi dal tema utility)
 COLORS = {
@@ -25,6 +25,8 @@ class ROIGraphicsView(QGraphicsView):
         self.app = app
         self.scene_ref = QGraphicsScene(self)
         self.setScene(self.scene_ref)
+        self._background_item: QGraphicsPixmapItem | None = None
+        self._roi_items: list[Any] = []
         self.setBackgroundBrush(QBrush(QColor(COLORS["bg_tertiary"])))
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setCursor(QCursor(Qt.CursorShape.CrossCursor))
@@ -62,9 +64,9 @@ class ROIGraphicsView(QGraphicsView):
             else:
                 self._start_point = scene_pos
                 if self._current_rect:
-                    self.scene_ref.removeItem(self._current_rect)
+                    self._active_scene().removeItem(self._current_rect)
                 pen = QPen(QColor(COLORS["accent"]), 2, Qt.PenStyle.DashLine)
-                self._current_rect = self.scene_ref.addRect(QRectF(scene_pos, scene_pos), pen)
+                self._current_rect = self._active_scene().addRect(QRectF(scene_pos, scene_pos), pen)
             event.accept()
         else:
             super().mousePressEvent(event)
@@ -111,7 +113,7 @@ class ROIGraphicsView(QGraphicsView):
             dist = math.hypot(end_point.x() - self._start_point.x(), end_point.y() - self._start_point.y())
             if dist < 10:
                 if self._current_rect:
-                    self.scene_ref.removeItem(self._current_rect)
+                    self._active_scene().removeItem(self._current_rect)
                     self._current_rect = None
                 self._start_point = None
                 return
@@ -126,12 +128,50 @@ class ROIGraphicsView(QGraphicsView):
             self.app.prompt_and_save_roi(roi_pdf_coords)
 
             if self._current_rect:
-                self.scene_ref.removeItem(self._current_rect)
+                self._active_scene().removeItem(self._current_rect)
                 self._current_rect = None
             self._start_point = None
             event.accept()
         else:
             super().mouseReleaseEvent(event)
+
+    def _active_scene(self) -> QGraphicsScene:
+        """Restituisce la scena mostrata dalla vista, creandola se manca."""
+        scene = self.scene()
+        if scene is None:
+            scene = QGraphicsScene(self)
+            self.scene_ref = scene
+            self.setScene(scene)
+        return scene
+
+    def set_background(self, pixmap: QPixmap) -> None:
+        """Mostra la pagina PDF sulla scena visibile."""
+        if pixmap.isNull():
+            return
+        scene = self._active_scene()
+        scene.clear()
+        self._roi_items = []
+        self._current_rect = None
+        self._start_point = None
+        self._background_item = scene.addPixmap(pixmap)
+        self._background_item.setZValue(-1)
+        scene.setSceneRect(self._background_item.boundingRect())
+
+    def clear_rois(self) -> None:
+        """Rimuove le ROI disegnate e lascia la pagina PDF."""
+        scene = self.scene()
+        for item in list(self._roi_items):
+            try:
+                if scene is not None and item.scene() is scene:
+                    scene.removeItem(item)
+            except RuntimeError:
+                continue
+        self._roi_items = []
+
+    def track_roi_items(self, items: list[Any]) -> None:
+        """Registra gli item ROI così una pulizia successiva non tocca il PDF."""
+        self._roi_items.extend(items)
+
     def set_zoom(self, scale_factor: float) -> None:
         """Imposta il fattore di zoom corrente."""
         self.resetTransform()

@@ -23,7 +23,7 @@ COLORS = {
     "danger": "#DC3545",
     "success": "#198754",
     "warning": "#FFC107",
-    "text_secondary": "#6B7280"
+    "text_secondary": "#6B7280",
 }
 
 
@@ -106,7 +106,15 @@ class NotificationManager:
         self.unread_count += 1
         title = title or level
 
-        bg_color = COLORS["success"] if level == "SUCCESS" else COLORS["danger"] if level == "ERROR" else COLORS["warning"] if level == "WARNING" else "#333"
+        bg_color = (
+            COLORS["success"]
+            if level == "SUCCESS"
+            else COLORS["danger"]
+            if level == "ERROR"
+            else COLORS["warning"]
+            if level == "WARNING"
+            else "#333"
+        )
         fg_color = "#FFFFFF" if level != "WARNING" else "#000000"
 
         toast = ToastNotification(title, message, bg_color, fg_color, on_close=self._on_toast_closed)

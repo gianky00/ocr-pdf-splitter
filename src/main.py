@@ -150,7 +150,9 @@ class MainApp(QMainWindow):
         new_widget = self.notebook.widget(index)
         old_widget = self.notebook.widget(self._prev_tab_index)
         if new_widget and old_widget and index != self._prev_tab_index:
-            UIAnimations.slide_fade_transition(old_widget, new_widget, "right" if index > self._prev_tab_index else "left")
+            UIAnimations.slide_fade_transition(
+                old_widget, new_widget, "right" if index > self._prev_tab_index else "left"
+            )
         self._prev_tab_index = index
 
     def _on_drop(self, files: list[str]) -> None:
@@ -179,6 +181,7 @@ class MainApp(QMainWindow):
         """Avvia lo strumento esterno per il disegno delle ROI."""
         try:
             from roi_utility import ROIDrawingApp
+
             self._roi_window = ROIDrawingApp()
             self._roi_window.show()
         except Exception as e:
@@ -237,7 +240,12 @@ class MainApp(QMainWindow):
             return
 
         category = selected[0].text(1)
-        reply = QMessageBox.question(self, "Conferma", f"Eliminare la regola '{category}'?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(
+            self,
+            "Conferma",
+            f"Eliminare la regola '{category}'?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
         if reply == QMessageBox.StandardButton.Yes and self.controller.rule_service.remove_rule(category):
             self.controller.save_settings()
             self._refresh_rules_tree()
@@ -258,6 +266,7 @@ class MainApp(QMainWindow):
     def _auto_detect_tesseract(self) -> None:
         """Tenta di individuare Tesseract automaticamente nel sistema."""
         from core.tesseract_manager import TesseractManager
+
         path = TesseractManager.auto_detect()
         if path:
             self.tesseract_path_entry.setText(path)

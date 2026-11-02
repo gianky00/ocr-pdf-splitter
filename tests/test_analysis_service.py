@@ -35,9 +35,7 @@ class TestAnalysisService(unittest.TestCase):
 
     def setUp(self):
         """Setup service and mocks."""
-        self.rules = [
-            {"category_name": "Category1", "keywords": ["TargetText"], "rois": [[0, 0, 200, 200]]}
-        ]
+        self.rules = [{"category_name": "Category1", "keywords": ["TargetText"], "rois": [[0, 0, 200, 200]]}]
         self.mock_ocr = MagicMock()
         self.service = AnalysisService(self.rules, self.mock_ocr)
 
@@ -73,7 +71,7 @@ class TestAnalysisService(unittest.TestCase):
         """Test parallel analysis path by mocking only the task method."""
         with patch("os.cpu_count", return_value=4), patch.object(self.service, "_analyze_page_task") as mock_task:
             # Ensure parallel path is taken by having total_pages > 1 and cpu_count > 1
-            mock_task.side_effect = lambda path, p: (p, "Category1" if p==0 else "sconosciuto")
+            mock_task.side_effect = lambda path, p: (p, "Category1" if p == 0 else "sconosciuto")
 
             results = self.service.analyze_pdf(str(self.test_pdf))
 
@@ -83,9 +81,11 @@ class TestAnalysisService(unittest.TestCase):
 
     def test_analyze_pdf_cancel(self):
         """Test cancellation during analysis."""
+
         def cancel_true():
             """Return True to simulate cancellation."""
             return True
+
         with self.assertRaises(InterruptedError):
             self.service.analyze_pdf(str(self.test_pdf), cancel_check=cancel_true)
 
@@ -97,6 +97,7 @@ class TestAnalysisService(unittest.TestCase):
                 mock_std.return_value = "mock_cat"
                 res = self.service._analyze_single_page(page)
                 self.assertEqual(res, "mock_cat")
+
 
 if __name__ == "__main__":
     unittest.main()

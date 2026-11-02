@@ -70,6 +70,7 @@ class PreviewGraphicsView(QGraphicsView):
         """Carica la prima pagina di un PDF nella vista grafica."""
         try:
             import fitz
+
             doc = fitz.open(file_path)
             if doc.page_count > 0:
                 page = doc.load_page(0)

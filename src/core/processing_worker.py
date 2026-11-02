@@ -25,7 +25,7 @@ class ProcessingWorker:
         odc: str,
         config: dict[str, Any],
         log_queue: Queue,
-        on_complete: Callable[[int, int, list[dict[str, Any]]], None] | None = None
+        on_complete: Callable[[int, int, list[dict[str, Any]]], None] | None = None,
     ) -> None:
         """
         Inizializza il worker con la lista dei file e i parametri di elaborazione.
@@ -93,16 +93,20 @@ class ProcessingWorker:
                 self.files_processed_count += 1
                 with suppress(Exception):
                     import pymupdf as fitz
+
                     with fitz.open(str(pdf_path)) as d:
                         self.pages_processed_count += d.page_count
 
                 self.log_queue.put(("File completato", "SUCCESS"))
                 for f in generated:
                     if f.get("category") == "sconosciuto":
-                        unknown_files.append({
-                            "unknown_path": f["path"], "source_path": moved,
-                            "siblings": [s["path"] for s in generated if s["category"] != "sconosciuto"]
-                        })
+                        unknown_files.append(
+                            {
+                                "unknown_path": f["path"],
+                                "source_path": moved,
+                                "siblings": [s["path"] for s in generated if s["category"] != "sconosciuto"],
+                            }
+                        )
 
         self.log_queue.put({"action": "update_progress", "value": 100, "text": "Completato!"})
 

@@ -25,7 +25,7 @@ class TestLicenseValidator(unittest.TestCase):
             "local_dir": self.test_dir,
             "sys_config": self.test_dir / "config.dat",
             "local_config": self.test_dir / "config_local.dat",
-            "token": self.test_dir / "validity.token"
+            "token": self.test_dir / "validity.token",
         }
 
         # Per i test, usiamo un HWID fisso e deriviamo la chiave
@@ -36,6 +36,7 @@ class TestLicenseValidator(unittest.TestCase):
     def tearDown(self):
         """Cleanup temporary files."""
         import shutil
+
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
@@ -76,11 +77,7 @@ class TestLicenseValidator(unittest.TestCase):
         mock_paths.return_value = self.paths
 
         # 1. Create encrypted config
-        data = {
-            "Cliente": "ACME",
-            "Hardware ID": self.test_hwid,
-            "Scadenza Licenza": "01/01/2099"
-        }
+        data = {"Cliente": "ACME", "Hardware ID": self.test_hwid, "Scadenza Licenza": "01/01/2099"}
         encrypted = self.cipher.encrypt(json.dumps(data).encode())
         self.paths["sys_config"].write_bytes(encrypted)
 
@@ -97,11 +94,7 @@ class TestLicenseValidator(unittest.TestCase):
         mock_all.return_value = [self.test_hwid]
         mock_paths.return_value = self.paths
 
-        data = {
-            "Cliente": "Test",
-            "Hardware ID": self.test_hwid,
-            "Scadenza Licenza": "01/01/2020"
-        }
+        data = {"Cliente": "Test", "Hardware ID": self.test_hwid, "Scadenza Licenza": "01/01/2020"}
         encrypted = self.cipher.encrypt(json.dumps(data).encode())
         self.paths["sys_config"].write_bytes(encrypted)
 

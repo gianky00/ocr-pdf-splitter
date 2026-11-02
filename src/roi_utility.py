@@ -7,7 +7,7 @@ import logging
 import sys
 from typing import Any
 
-from PySide6.QtGui import QAction, QPixmap
+from PySide6.QtGui import QAction, QImage, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -27,8 +27,35 @@ from core.pdf_manager import PdfManager
 from core.roi_manager import RoiManager
 from core.rule_service import RuleService
 from gui.widgets.pdf_graphics_view import ROIGraphicsView
+from gui.widgets.roi_renderer import ROIRenderer
 
 logger = logging.getLogger("ROI_UTILITY")
+
+_ROI_MARKER_KEY = 11
+_ROI_RULE_KEY = 12
+_ROI_INDEX_KEY = 13
+
+
+def _roi_coords(coords: Any) -> list[int] | None:
+    """Normalizza una ROI in quattro interi PDF, oppure None se non è valida."""
+    if not isinstance(coords, (list, tuple)) or len(coords) != 4:
+        return None
+    try:
+        return [int(coords[0]), int(coords[1]), int(coords[2]), int(coords[3])]
+    except (TypeError, ValueError):
+        return None
+
+
+def _fitz_pixmap_to_qpixmap(pix: Any) -> QPixmap:
+    """Converte una pixmap PyMuPDF in QPixmap, copiando il buffer."""
+    if pix.alpha or pix.n == 4:
+        image_format = QImage.Format.Format_RGBA8888
+    elif pix.n == 1:
+        image_format = QImage.Format.Format_Grayscale8
+    else:
+        image_format = QImage.Format.Format_RGB888
+    image = QImage(pix.samples, pix.width, pix.height, pix.stride, image_format)
+    return QPixmap.fromImage(image.copy())
 
 
 class ROIDrawingApp(QMainWindow):
@@ -83,6 +110,7 @@ class ROIDrawingApp(QMainWindow):
 
         if getattr(sys, "_testing", False):
             from unittest.mock import MagicMock
+
             self.view: Any = MagicMock()
             self.scene: Any = MagicMock()
             self.right_layout.addWidget(QWidget())
@@ -119,9 +147,14 @@ class ROIDrawingApp(QMainWindow):
         """Carica e renderizza la pagina specificata del PDF corrente."""
         if not self.current_pdf_path:
             return
-        pixmap = self.pdf_manager.get_page_pixmap(self.current_pdf_path, page_num)
-        if pixmap:
-            self.on_page_rendered(pixmap)
+        pix = self.pdf_manager.get_page_pixmap(self.current_pdf_path, page_num)
+        if not pix:
+            return
+        qpixmap = _fitz_pixmap_to_qpixmap(pix)
+        if qpixmap.isNull():
+            return
+        self.current_page = page_num
+        self.on_page_rendered(qpixmap)
 
     def on_rule_selected(self, index: int) -> None:
         """Gestisce il cambio della regola attiva per l'associazione ROI."""
@@ -136,6 +169,66 @@ class ROIDrawingApp(QMainWindow):
 
     def show_existing_rois(self) -> None:
         """Visualizza sulla scena le ROI già salvate per la regola corrente."""
+        if not hasattr(self.view, "clear_rois"):
+            return
+        self.view.clear_rois()
+        if not self.selected_rule_name:
+            return
+        scene = self.view.scene()
+        if scene is None:
+            return
+
+        rules = self.rule_service.get_rules()
+        self.rules = rules
+        renderer = ROIRenderer(scene, self.zoom_level)
+        for rule_index, rule in enumerate(rules):
+            if not isinstance(rule, dict) or rule.get("category_name") != self.selected_rule_name:
+                continue
+            color = str(rule.get("color") or "#0D6EFD")
+            category = str(rule.get("category_name") or "")
+            rois = rule.get("rois", [])
+            if not isinstance(rois, list):
+                continue
+            for roi_index, coords in enumerate(rois):
+                pdf_coords = _roi_coords(coords)
+                if pdf_coords is None:
+                    continue
+                items = renderer.draw_roi(rule_index, roi_index, category, color, pdf_coords)
+                for item in items:
+                    item.setData(_ROI_MARKER_KEY, 1)
+                    item.setData(_ROI_RULE_KEY, rule_index)
+                    item.setData(_ROI_INDEX_KEY, roi_index)
+                if hasattr(self.view, "track_roi_items"):
+                    self.view.track_roi_items(items)
+
+    def handle_delete_click(self, scene_pos: Any) -> None:
+        """Elimina la ROI sotto il cursore quando la modalità elimina è attiva."""
+        scene = self.view.scene() if hasattr(self.view, "scene") else None
+        if scene is None:
+            return
+        for item in scene.items(scene_pos):
+            if item.data(_ROI_MARKER_KEY) != 1:
+                continue
+            rule_index = item.data(_ROI_RULE_KEY)
+            roi_index = item.data(_ROI_INDEX_KEY)
+            if isinstance(rule_index, float):
+                rule_index = int(rule_index)
+            if isinstance(roi_index, float):
+                roi_index = int(roi_index)
+            if not isinstance(rule_index, int) or not isinstance(roi_index, int):
+                continue
+            rules = self.rule_service.get_rules()
+            if not (0 <= rule_index < len(rules)):
+                return
+            rois = rules[rule_index].get("rois")
+            if not isinstance(rois, list) or not (0 <= roi_index < len(rois)):
+                return
+            rois.pop(roi_index)
+            self.rule_service.save_rules()
+            self.rules = rules
+            self.show_existing_rois()
+            self.status_bar.setText("ROI eliminata")
+            return
 
     def toggle_delete_mode(self, enabled: bool) -> None:
         """Attiva o disattiva la modalità di eliminazione delle ROI."""
@@ -177,10 +270,12 @@ class ROIDrawingApp(QMainWindow):
             self,
             "Conferma",
             f"Salvare questa ROI per '{self.selected_rule_name}'?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
         )
 
-        if reply == QMessageBox.StandardButton.Yes and self.rule_service.add_roi_to_rule(self.selected_rule_name, coords_pdf):
+        if reply == QMessageBox.StandardButton.Yes and self.rule_service.add_roi_to_rule(
+            self.selected_rule_name, coords_pdf
+        ):
             self.rule_service.save_rules()
             self.status_bar.setText(f"ROI salvata per {self.selected_rule_name}")
             self.show_existing_rois()
@@ -189,6 +284,7 @@ class ROIDrawingApp(QMainWindow):
         """Metodo unificato per il rendering della pixmap sulla vista."""
         if hasattr(self.view, "set_background"):
             self.view.set_background(pixmap)
+        self.show_existing_rois()
 
 
 def run_utility() -> None:
@@ -197,6 +293,7 @@ def run_utility() -> None:
 
     import license_updater
     import license_validator
+
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     with suppress(Exception):

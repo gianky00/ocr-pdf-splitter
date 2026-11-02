@@ -34,6 +34,7 @@ class TestConfigManager(unittest.TestCase):
         self.patcher.stop()
         self.base_patcher.stop()
         import shutil
+
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
@@ -83,6 +84,7 @@ class TestConfigManager(unittest.TestCase):
 
         self.assertEqual(len(loaded["classification_rules"]), 1)
         self.assertEqual(loaded["setting"], "default")
+
 
 if __name__ == "__main__":
     unittest.main()

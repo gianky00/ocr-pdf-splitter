@@ -42,5 +42,6 @@ class TestSplashScreen(unittest.TestCase):
         self.splash.set_version("2.5.0")
         self.assertIn("2.5.0", self.splash.version_label.text())
 
+
 if __name__ == "__main__":
     unittest.main()

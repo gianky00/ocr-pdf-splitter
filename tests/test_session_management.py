@@ -1,6 +1,7 @@
 """
 Unit tests for session management in MainApp.
 """
+
 import json
 import os
 import sys
@@ -13,6 +14,7 @@ import main
 
 class TestSessionManagement(unittest.TestCase):
     """Test suite per la gestione della sessione nell'applicazione principale."""
+
     def setUp(self):
         """Prepara un ambiente di test pulito."""
         self.dummy_tasks = [

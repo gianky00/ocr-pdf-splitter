@@ -2,15 +2,20 @@
 Modulo per la Tab Guida (SRP).
 """
 
-import os
 from typing import Any
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QHBoxLayout, QListWidget, QSplitter, QTextEdit, QVBoxLayout, QWidget
 
 from gui.theme import COLORS, FONTS
 from gui.ui_factory import AnimatedButton
 from shared.constants import APP_DATA_DIR
+
+
+def _open_data_folder() -> None:
+    """Apre la cartella dati dell'applicazione."""
+    QDesktopServices.openUrl(QUrl.fromLocalFile(str(APP_DATA_DIR)))
 
 
 class HelpTab(QWidget):
@@ -32,7 +37,7 @@ class HelpTab(QWidget):
         header.addStretch()
 
         btn_open = AnimatedButton("APRI CARTELLA DATI")
-        btn_open.clicked.connect(lambda: os.startfile(APP_DATA_DIR))
+        btn_open.clicked.connect(_open_data_folder)
         header.addWidget(btn_open)
         layout.addLayout(header)
 

@@ -6,7 +6,7 @@ Confronta le versioni tra Rete Locale e Web, scegliendo la più recente o privil
 
 import json
 import os
-import subprocess
+import subprocess  # nosec B404
 import sys
 import tempfile
 import time
@@ -36,10 +36,11 @@ def get_local_setup_path(url_or_path: str) -> str:
 
 class DownloadWorker(QThread):
     """Worker per il download/copia dell'aggiornamento."""
+
     progress = Signal(int, int, float)  # downloaded, total, speed
-    finished = Signal(str)              # path del file scaricato
+    finished = Signal(str)  # path del file scaricato
     error = Signal(str)
-    retrying = Signal(int)              # numero del tentativo di riconnessione
+    retrying = Signal(int)  # numero del tentativo di riconnessione
 
     def __init__(self, source_path: str):
         """Inizializza il worker con la sorgente (URL o Path)."""
@@ -90,7 +91,7 @@ class DownloadWorker(QThread):
 
         while not self._is_cancelled:
             try:
-                headers = {'Range': f'bytes={downloaded}-'} if downloaded > 0 else {}
+                headers = {"Range": f"bytes={downloaded}-"} if downloaded > 0 else {}
                 session = requests.Session()
                 response = session.get(self.source, headers=headers, stream=True, timeout=(10, 30))
 
@@ -107,8 +108,8 @@ class DownloadWorker(QThread):
 
                 if downloaded == 0:
                     total_size = int(response.headers.get("content-length", 0))
-                elif 'Content-Range' in response.headers:
-                    total_size = int(response.headers['Content-Range'].split('/')[-1])
+                elif "Content-Range" in response.headers:
+                    total_size = int(response.headers["Content-Range"].split("/")[-1])
 
                 mode = "ab" if downloaded > 0 else "wb"
                 with target_path.open(mode) as f:
@@ -166,7 +167,9 @@ class UpdateProgressDialog(QDialog):
         layout.addWidget(self.lbl_status)
         self.pb = QProgressBar()
         self.pb.setFixedHeight(24)
-        self.pb.setStyleSheet("QProgressBar { border: 1px solid #CCC; border-radius: 6px; text-align: center; background: #F0F0F0; } QProgressBar::chunk { background: #0D6EFD; border-radius: 5px; }")
+        self.pb.setStyleSheet(
+            "QProgressBar { border: 1px solid #CCC; border-radius: 6px; text-align: center; background: #F0F0F0; } QProgressBar::chunk { background: #0D6EFD; border-radius: 5px; }"
+        )
         layout.addWidget(self.pb)
         self.lbl_details = QLabel("Preparazione...")
         self.lbl_details.setFont(QFont("Segoe UI", 9))
@@ -232,21 +235,36 @@ def show_install_prompt(path: str, parent: Any = None) -> None:
         _run_installer_and_exit(path)
     elif msg.clickedButton() == btn_later:
         _pending_installer_path = path
-        QMessageBox.information(parent if isinstance(parent, QWidget) else None, "Info", "L'aggiornamento verrà eseguito alla chiusura dell'applicazione.")
+        QMessageBox.information(
+            parent if isinstance(parent, QWidget) else None,
+            "Info",
+            "L'aggiornamento verrà eseguito alla chiusura dell'applicazione.",
+        )
+
+
+def _launch_installer(path: str) -> bool:
+    """Avvia un installer Inno Setup già presente sul disco."""
+    installer = Path(path).resolve()
+    if not installer.is_file() or installer.suffix.lower() != ".exe":
+        return False
+    subprocess.Popen(  # nosec B603
+        [str(installer), "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/FORCESTART"],
+        shell=False,
+    )
+    return True
 
 
 def _run_installer_and_exit(path: str) -> None:
     """Avvia l'installer in modalità silenziosa e chiude l'app corrente."""
-    if Path(path).exists():
-        subprocess.Popen([path, "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/FORCESTART"])
+    if _launch_installer(path):
         sys.exit(0)
 
 
 def run_pending_installer() -> None:
     """Esegue l'installer memorizzato alla chiusura dell'app."""
     global _pending_installer_path
-    if _pending_installer_path and Path(_pending_installer_path).exists():
-        subprocess.Popen([_pending_installer_path, "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/FORCESTART"])
+    if _pending_installer_path:
+        _launch_installer(_pending_installer_path)
 
 
 def get_metadata_from_network() -> dict[str, Any] | None:
@@ -305,7 +323,9 @@ def check_for_updates(silent: bool = True, on_confirm: Any = None) -> None:
 
     if remote_v_str and pkg_version.parse(remote_v_str) > pkg_version.parse(version.__version__):
         msg = f"Disponibile versione {remote_v_str} ({source_name}).\n\nVuoi scaricare l'aggiornamento?"
-        reply = QMessageBox.question(None, "🔄 Aggiornamento", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        reply = QMessageBox.question(
+            None, "🔄 Aggiornamento", msg, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
         if reply == QMessageBox.StandardButton.Yes:
             if on_confirm:
                 on_confirm()

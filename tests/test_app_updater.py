@@ -16,6 +16,7 @@ class TestAppUpdater(unittest.TestCase):
     def setUpClass(cls):
         """Initialize QApplication for widget tests."""
         from PySide6.QtWidgets import QApplication
+
         cls.app = QApplication.instance() or QApplication([])
 
     def setUp(self):
@@ -35,6 +36,7 @@ class TestAppUpdater(unittest.TestCase):
         mock_web.return_value = {"version": "2.0.0", "url": "http://web/setup.exe", "source": "Web"}
 
         from PySide6.QtWidgets import QMessageBox
+
         mock_quest.return_value = QMessageBox.StandardButton.Yes
 
         with patch("app_updater.perform_auto_update") as mock_perform:
@@ -54,6 +56,7 @@ class TestAppUpdater(unittest.TestCase):
         mock_web.return_value = {"version": "2.1.0", "url": "http://web/setup.exe", "source": "Web"}
 
         from PySide6.QtWidgets import QMessageBox
+
         mock_quest.return_value = QMessageBox.StandardButton.Yes
 
         with patch("app_updater.perform_auto_update") as mock_perform:
@@ -88,6 +91,7 @@ class TestAppUpdater(unittest.TestCase):
         path2 = app_updater.get_local_setup_path("http://web.com/update.exe")
         self.assertTrue(path1.endswith("setup.exe"))
         self.assertTrue(path2.endswith("update.exe"))
+
 
 if __name__ == "__main__":
     unittest.main()

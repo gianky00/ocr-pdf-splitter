@@ -29,6 +29,7 @@ class TestLicenseUpdater(unittest.TestCase):
     def tearDown(self):
         """Cleanup temporary files."""
         import shutil
+
         if self.test_dir.exists():
             shutil.rmtree(self.test_dir)
 
@@ -78,7 +79,7 @@ class TestLicenseUpdater(unittest.TestCase):
             "sys_config": self.test_dir / "config.dat",
             "local_dir": self.test_dir / "local",
             "local_config": self.test_dir / "local" / "config.dat",
-            "token": self.token_path
+            "token": self.token_path,
         }
         mock_paths.return_value = paths
 
@@ -107,6 +108,7 @@ class TestLicenseUpdater(unittest.TestCase):
         # Verifica file creati
         self.assertTrue(paths["sys_config"].exists())
         self.assertTrue(self.token_path.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

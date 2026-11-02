@@ -23,6 +23,7 @@ class TestOcrEngine(unittest.TestCase):
         with patch("pytesseract.pytesseract.tesseract_cmd", ""):
             OcrEngine(tesseract_path="/path/to/tess")
             import pytesseract
+
             self.assertEqual(pytesseract.pytesseract.tesseract_cmd, "/path/to/tess")
 
     def test_get_binary(self):
@@ -76,6 +77,7 @@ class TestOcrEngine(unittest.TestCase):
 
         self.assertFalse(found)
         self.assertEqual(keyword, "")
+
 
 if __name__ == "__main__":
     unittest.main()

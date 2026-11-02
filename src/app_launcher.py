@@ -97,6 +97,7 @@ def run_app() -> None:
     splash.set_progress(30, "Verifica licenza online...")
     import license_updater
     import license_validator
+
     try:
         license_updater.run_update()
     except license_updater.LicenseRevokedError as e:

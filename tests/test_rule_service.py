@@ -16,7 +16,7 @@ class TestRuleService(unittest.TestCase):
         self.config = {
             "classification_rules": [
                 {"category_name": "Test1", "keywords": ["key1"], "rois": []},
-                {"category_name": "Test2", "keywords": ["key2"], "rois": []}
+                {"category_name": "Test2", "keywords": ["key2"], "rois": []},
             ]
         }
         self.service = RuleService(self.config)
@@ -92,6 +92,7 @@ class TestRuleService(unittest.TestCase):
         """Test that save calls the config manager."""
         self.service.save()
         mock_save.assert_called_once_with(self.config)
+
 
 if __name__ == "__main__":
     unittest.main()

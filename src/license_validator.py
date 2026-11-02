@@ -6,10 +6,12 @@ Tutorial Implementation: HWID via Primary Disk Serial + Normalizzazione Aggressi
 import base64
 import json
 import logging
+import os
 import platform
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404
+import uuid
 from contextlib import suppress
 from datetime import date
 from pathlib import Path
@@ -38,7 +40,37 @@ def normalize_hwid(raw_id: str) -> str:
 
     # Rimuove punti finali, spazi e caratteri non permessi
     # Rimuove anche i doppi apici che spesso PowerShell restituisce
-    return re.sub(r"[^a-zA-Z0-9-_]", "", raw_id.replace('"', '')).strip().upper()
+    return re.sub(r"[^a-zA-Z0-9-_]", "", raw_id.replace('"', "")).strip().upper()
+
+
+def _powershell_executable() -> str:
+    """Percorso assoluto di Windows PowerShell."""
+    system_root = os.environ.get("SYSTEMROOT", r"C:\Windows")
+    return str(Path(system_root) / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe")
+
+
+def _query_powershell(command: str) -> str:
+    """Esegue un comando PowerShell fisso, senza shell."""
+    output = subprocess.check_output(  # nosec B603
+        [_powershell_executable(), "-NoProfile", "-Command", command],
+        stderr=subprocess.DEVNULL,
+        shell=False,
+    )
+    return output.decode().strip()
+
+
+def _decrypt_with_hwid(encrypted_bytes: bytes, hw_id: str) -> dict | None:
+    """Decifra la licenza con un HWID. None se la chiave non corrisponde."""
+    try:
+        dynamic_key = derive_license_key(hw_id)
+        cipher = Fernet(dynamic_key)
+        decrypted_data = cipher.decrypt(encrypted_bytes)
+        data = json.loads(decrypted_data.decode("utf-8"))
+    except Exception:
+        return None
+    if isinstance(data, dict):
+        return data
+    return None
 
 
 def get_all_hardware_ids() -> list[str]:
@@ -52,7 +84,7 @@ def get_all_hardware_ids() -> list[str]:
         with suppress(Exception):
             # Query per TUTTI i dischi fisici
             cmd = "Get-CimInstance -Class Win32_DiskDrive | Select-Object -ExpandProperty SerialNumber"
-            output = subprocess.check_output(["powershell", "-NoProfile", "-Command", cmd], stderr=subprocess.DEVNULL, shell=True).decode().strip()
+            output = _query_powershell(cmd)
 
             if output:
                 for line in output.splitlines():
@@ -67,7 +99,6 @@ def get_all_hardware_ids() -> list[str]:
 
     # Fallback UUID (sempre incluso come ultima risorsa)
     with suppress(Exception):
-        import uuid
         ids.append(normalize_hwid(str(uuid.getnode())))
 
     # Rimuove duplicati mantenendo l'ordine
@@ -83,7 +114,7 @@ def get_hardware_id() -> str:
         with suppress(Exception):
             # Tenta di prendere il seriale del disco che ospita la partizione C: (molto più affidabile)
             cmd = "(Get-Partition -DriveLetter C | Get-Disk).SerialNumber"
-            output = subprocess.check_output(["powershell", "-NoProfile", "-Command", cmd], stderr=subprocess.DEVNULL, shell=True).decode().strip()
+            output = _query_powershell(cmd)
 
             if output:
                 # Se l'output contiene più righe (raro per un solo disco), prendiamo l'ultima che non sia l'intestazione
@@ -95,7 +126,6 @@ def get_hardware_id() -> str:
     # Fallback al primo dei dischi rilevati o UUID
     all_ids = get_all_hardware_ids()
     return all_ids[0] if all_ids else "UNKNOWN_HWID"
-
 
 
 def derive_license_key(hw_id: str) -> bytes:
@@ -118,10 +148,12 @@ def derive_license_key(hw_id: str) -> bytes:
 def _get_license_paths():
     """Percorsi ridondanti (AppData + Locale) richiesti dallo standard."""
     import os
+
     sys_dir = Path(os.environ.get("APPDATA") or Path.home()) / "Intelleo PDF Splitter" / "Licenza"
 
     # Percorso locale nel progetto
     from core.path_manager import get_app_base_dir
+
     local_dir = Path(get_app_base_dir()) / "data" / "Licenza"
 
     return {
@@ -129,7 +161,7 @@ def _get_license_paths():
         "local_dir": local_dir,
         "sys_config": sys_dir / "config.dat",
         "local_config": local_dir / "config.dat",
-        "token": sys_dir / "validity.token"
+        "token": sys_dir / "validity.token",
     }
 
 
@@ -162,16 +194,10 @@ def get_license_info() -> dict | None:
     encrypted_bytes = config_path.read_bytes()
 
     for hw_id in all_ids:
-        try:
-            dynamic_key = derive_license_key(hw_id)
-            cipher = Fernet(dynamic_key)
-            decrypted_data = cipher.decrypt(encrypted_bytes)
-            data = json.loads(decrypted_data.decode("utf-8"))
-            if isinstance(data, dict):
-                logger.debug(f"Licenza decifrata con successo usando HWID: {hw_id}")
-                return data
-        except Exception:
-            continue
+        data = _decrypt_with_hwid(encrypted_bytes, hw_id)
+        if data is not None:
+            logger.debug(f"Licenza decifrata con successo usando HWID: {hw_id}")
+            return data
 
     return None
 
@@ -199,11 +225,9 @@ def verify_license() -> tuple[bool, str]:
     return True, f"Licenza valida per: {payload.get('Cliente', 'Utente')}"
 
 
-
 def destroy_license() -> None:
     """Cancellazione file in caso di revoca (Tutorial Requirement)."""
     paths = _get_license_paths()
     with suppress(Exception):
         shutil.rmtree(paths["sys_dir"], ignore_errors=True)
         shutil.rmtree(paths["local_dir"], ignore_errors=True)
-

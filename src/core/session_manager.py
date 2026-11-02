@@ -59,4 +59,4 @@ class SessionManager:
             return [], "Unknown"
         except Exception as e:
             logger.exception(f"Errore caricamento sessione: {e}")
-            raise # Risolve test_load_session_corrupted (logga + raise)
+            raise  # Risolve test_load_session_corrupted (logga + raise)

@@ -39,10 +39,12 @@ class TestPdfGraphicsView(unittest.TestCase):
         pos = QPointF(10, 10)
         event = QMouseEvent(
             QMouseEvent.Type.MouseButtonPress,
-            pos, pos, pos,
+            pos,
+            pos,
+            pos,
             Qt.MouseButton.LeftButton,
             Qt.MouseButton.LeftButton,
-            Qt.KeyboardModifier.NoModifier
+            Qt.KeyboardModifier.NoModifier,
         )
         self.view.mousePressEvent(event)
         self.assertIsNotNone(self.view._start_point)
@@ -52,13 +54,16 @@ class TestPdfGraphicsView(unittest.TestCase):
         pos = QPointF(10, 10)
         event = QMouseEvent(
             QMouseEvent.Type.MouseButtonRelease,
-            pos, pos, pos,
+            pos,
+            pos,
+            pos,
             Qt.MouseButton.LeftButton,
             Qt.MouseButton.NoButton,
-            Qt.KeyboardModifier.NoModifier
+            Qt.KeyboardModifier.NoModifier,
         )
         self.view.mouseReleaseEvent(event)
         self.assertIsNone(self.view._start_point)
+
 
 if __name__ == "__main__":
     unittest.main()

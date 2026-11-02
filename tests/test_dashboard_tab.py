@@ -45,5 +45,6 @@ class TestDashboardTab(unittest.TestCase):
         # Check if clock label was created on the tab itself
         self.assertTrue(hasattr(self.tab, "clock_label"))
 
+
 if __name__ == "__main__":
     unittest.main()

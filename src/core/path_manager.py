@@ -28,6 +28,7 @@ class PathManager:
     def get_app_data_dir() -> str:
         """Restituisce il percorso della cartella dati in APPDATA."""
         import os
+
         app_data_root = Path(os.getenv("APPDATA") or Path.home())
         path = app_data_root / "Intelleo PDF Splitter"
         path.mkdir(parents=True, exist_ok=True)

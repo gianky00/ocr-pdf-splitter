@@ -42,7 +42,7 @@ class UnknownFilesReviewDialog(QDialog):
         odc: str = "N/A",
         rules: list[dict[str, Any]] | None = None,
         on_finish: Any | None = None,
-        on_close_callback: Any | None = None
+        on_close_callback: Any | None = None,
     ) -> None:
         """Inizializza il dialogo con la lista dei task e le regole di classificazione."""
         super().__init__(parent)
@@ -158,6 +158,7 @@ class UnknownFilesReviewDialog(QDialog):
             self.preview = QFrame()
         else:
             from gui.widgets.preview_view import PreviewGraphicsView
+
             self.preview = PreviewGraphicsView()
 
         self.splitter.addWidget(self.preview)
@@ -206,6 +207,7 @@ class UnknownFilesReviewDialog(QDialog):
 
         try:
             import fitz
+
             doc = fitz.open(pdf_path)
             cols = 1  # Dispositizione verticale (una sotto l'altra) per massimizzare la leggibilità
 
@@ -216,6 +218,7 @@ class UnknownFilesReviewDialog(QDialog):
 
                 # Conversione in QPixmap
                 from PySide6.QtGui import QImage
+
                 fmt = QImage.Format.Format_RGBA8888 if pix.alpha else QImage.Format.Format_RGB888
                 qimg = QImage(pix.samples, pix.width, pix.height, pix.stride, fmt)
                 qpix = QPixmap.fromImage(qimg.copy())
@@ -241,6 +244,7 @@ class UnknownFilesReviewDialog(QDialog):
         """Carica una pagina specifica nell'anteprima grande."""
         try:
             import fitz
+
             path = self.review_tasks[self.task_index]["unknown_path"]
             doc = fitz.open(path)
             page = doc.load_page(page_index)
@@ -248,6 +252,7 @@ class UnknownFilesReviewDialog(QDialog):
             pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
 
             from PySide6.QtGui import QImage
+
             fmt = QImage.Format.Format_RGBA8888 if pix.alpha else QImage.Format.Format_RGB888
             qimg = QImage(pix.samples, pix.width, pix.height, pix.stride, fmt)
 
@@ -275,6 +280,7 @@ class UnknownFilesReviewDialog(QDialog):
 
         if not self.selected_pages:
             from PySide6.QtWidgets import QMessageBox
+
             QMessageBox.information(self, "Info", "Seleziona almeno una pagina cliccando sulle miniature.")
             return
 
@@ -297,7 +303,10 @@ class UnknownFilesReviewDialog(QDialog):
         """Esegue lo split fisico del file in base allo smistamento e passa al prossimo."""
         if not self.current_page_assignments:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Attenzione", "Nessuna pagina è stata smistata. Assegna le categorie prima di concludere.")
+
+            QMessageBox.warning(
+                self, "Attenzione", "Nessuna pagina è stata smistata. Assegna le categorie prima di concludere."
+            )
             return
 
         try:
@@ -311,7 +320,12 @@ class UnknownFilesReviewDialog(QDialog):
 
             if len(self.current_page_assignments) < len(doc):
                 from PySide6.QtWidgets import QMessageBox
-                QMessageBox.warning(self, "Attenzione", "Non tutte le pagine sono state smistate. Assegna una categoria a tutte le pagine prima di concludere.")
+
+                QMessageBox.warning(
+                    self,
+                    "Attenzione",
+                    "Non tutte le pagine sono state smistate. Assegna una categoria a tutte le pagine prima di concludere.",
+                )
                 doc.close()
                 return
 
@@ -328,6 +342,7 @@ class UnknownFilesReviewDialog(QDialog):
 
             # Elimina il file sconosciuto locale
             import os
+
             try:
                 os.remove(pdf_path)
             except Exception as e:
@@ -337,6 +352,7 @@ class UnknownFilesReviewDialog(QDialog):
 
             # Informa l'utente
             from PySide6.QtWidgets import QMessageBox
+
             QMessageBox.information(self, "Successo", "Smistamento completato con successo.")
 
             self.next_or_close()
