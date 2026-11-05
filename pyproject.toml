@@ -3,6 +3,31 @@ name = "intelleo-pdf-splitter"
 version = "2.1.0"
 description = "Automazione documentale per divisione PDF con OCR"
 requires-python = ">=3.10"
+dependencies = [
+    "PySide6",
+    "PyMuPDF",
+    "Pillow",
+    "pytesseract",
+    "cryptography",
+    "requests",
+    "packaging",
+]
+
+[dependency-groups]
+# Suite di qualità. Installazione: uv sync --group dev --inexact
+# --inexact lascia nel .venv i pacchetti già messi da launch.bat.
+dev = [
+    "ruff",
+    "mypy",
+    "bandit",
+    "deptry",
+    "vulture",
+    "codespell",
+    "refurb",
+    "interrogate",
+    "xenon",
+    "radon",
+]
 
 # ============================================================================
 # RUFF — Linter + Formatter (sostituisce flake8, isort, black, pyflakes)
@@ -80,3 +105,7 @@ fail_under = 50
 [tool.bandit]
 exclude_dirs = ["tests", ".venv"]
 skips = ["B101"]  # assert usato nei test
+
+[tool.deptry.package_module_name_map]
+PyMuPDF = ["pymupdf", "fitz"]
+Pillow = ["PIL"]

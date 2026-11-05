@@ -96,7 +96,7 @@ class NotificationManager:
         if hasattr(parent_widget, "controller"):
             parent_widget.controller.log_received.connect(self.on_controller_log)
 
-    def on_controller_log(self, message: str, level: str, replace_last: bool = False) -> None:
+    def on_controller_log(self, message: str, level: str) -> None:
         """Riceve log dal controller e attiva una notifica per i livelli rilevanti."""
         if level in ("SUCCESS", "ERROR", "WARNING"):
             self.notify(message, level)

@@ -34,4 +34,4 @@ Se wiki e skill divergono, vince il codice.
 - Pipeline, OCR, ROI: carica `isab-elaborazione`.
 - Tab, dialoghi, tema: carica `isab-ui`.
 - Prima di dichiarare un test verde, esegui il pytest del file toccato.
-- Se hai modificato un `.py` in `src/`, esegui `scripts/check_wiki_sync.py`. L’avviso non fallisce il processo: il protocollo wiki dice se la pagina va aggiornata.
+- Se hai modificato un `.py` in `src/`, esegui `scripts/check_wiki_sync.py`. Se avvisa, aggiorna nello stesso task la pagina del modulo. Non chiedere.

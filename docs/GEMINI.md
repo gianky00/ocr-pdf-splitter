@@ -26,12 +26,17 @@ PowerShell, dalla root del repository.
 | Test del corredo agente | `.venv\Scripts\python.exe -m pytest tests\test_agent_kit.py -q` |
 | Ruff | `.venv\Scripts\ruff.exe check <file>` |
 | Avviso wiki | `.venv\Scripts\python.exe scripts\check_wiki_sync.py` |
+| Suite qualità | `.\scripts\run_quality_checks.bat` |
+| Suite senza coverage | `.\scripts\run_quality_checks.bat --skip-coverage` |
+| Auto-fix Ruff | `.\scripts\run_quality_checks.bat --fix` |
 
 `pyproject.toml` punta i test a `tests/` e la coverage a `src/` con soglia 50. `launch.bat` installa `src/requirements.txt` nel `.venv`.
 
+`scripts/run_quality_checks.bat` lancia `scripts/run_quality_checks.py`. I bloccanti sono Ruff e pytest; `pytest --cov` parte dopo, con la soglia già in `pyproject.toml`, e si esclude con `--skip-coverage`. `--skip-tests` esclude pytest e coverage. Mypy, Bandit, `scripts/check_wiki_sync.py` e gli altri strumenti del gruppo `dev` in `pyproject.toml` sono avvisi: se il modulo manca, il report lo segna non disponibile. L'esito del processo è quello dei bloccanti. Il report sta in `logs/quality_report.log`. I tool di sviluppo si installano con `uv sync --group dev --inexact`: il flag lascia nel `.venv` i pacchetti già installati da `launch.bat`.
+
 Python del progetto: `.venv\Scripts\python.exe`. Il `python` di sistema non vede le dipendenze.
 
-`scripts/check_wiki_sync.py` legge `git status` e termina sempre con 0. Se un `.py` sotto `src/` è cambiato e nessun `.md` sotto `wiki/isab/` lo è, stampa un avviso. Una cartella `wiki/` non tracciata conta come i markdown che contiene: git la riporta come directory e lo script la espande. L’avviso non distingue un ritocco interno da un cambio di contratto: lo decide [`../wiki/isab/workflows/pre_commit_wiki_protocol.md`](../wiki/isab/workflows/pre_commit_wiki_protocol.md). Un `GEMINI.md` aggiornato da solo non spegne l’avviso.
+`scripts/check_wiki_sync.py` legge `git status` e termina sempre con 0. Se un `.py` sotto `src/` è cambiato e nessun `.md` sotto `wiki/isab/` lo è, stampa un avviso. Una cartella `wiki/` non tracciata conta come i markdown che contiene: git la riporta come directory e lo script la espande. L’avviso si chiude nello stesso task, aggiornando la pagina del modulo. Un `GEMINI.md` aggiornato da solo non spegne l’avviso. Protocollo: [`../wiki/isab/workflows/pre_commit_wiki_protocol.md`](../wiki/isab/workflows/pre_commit_wiki_protocol.md).
 
 ## Rilascio
 
@@ -66,6 +71,6 @@ Il percorso di rete è la costante `NETWORK_DEPLOY_PATH` in quello script. Non v
 ## Checklist prima di chiudere
 
 - [ ] Test esistente sul perimetro eseguito.
-- [ ] `.venv\Scripts\python.exe scripts\check_wiki_sync.py` eseguito. Se avvisa e il protocollo richiede l’aggiornamento, la wiki non è ancora allineata.
+- [ ] `.venv\Scripts\python.exe scripts\check_wiki_sync.py` eseguito. Se avvisa, la pagina del modulo è aggiornata nello stesso task.
 - [ ] Nessun file di config utente, licenza o log aggiunto al commit.
 - [ ] OCR e split non spostati sul thread della UI.

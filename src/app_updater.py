@@ -55,35 +55,38 @@ class DownloadWorker(QThread):
     def run(self) -> None:
         """Esegue il download via HTTP o copia via FileSystem."""
         target_path = Path(get_local_setup_path(self.source))
-
-        # Caso 1: Percorso di RETE Locale (UNC o Path locale)
         source_path = Path(self.source)
         if source_path.exists() and not self.source.lower().startswith("http"):
-            try:
-                total_size = source_path.stat().st_size
-                chunk_size = 1024 * 1024  # 1MB
-                downloaded = 0
-                start_time = time.time()
+            self._copy_local_source(source_path, target_path)
+            return
+        self._download_from_web(target_path)
 
-                with source_path.open("rb") as fsrc, target_path.open("wb") as fdst:
-                    while not self._is_cancelled:
-                        buf = fsrc.read(chunk_size)
-                        if not buf:
-                            break
-                        fdst.write(buf)
-                        downloaded += len(buf)
-                        elapsed = time.time() - start_time
-                        speed = downloaded / elapsed if elapsed > 0 else 0
-                        self.progress.emit(downloaded, total_size, speed)
+    def _copy_local_source(self, source_path: Path, target_path: Path) -> None:
+        """Copia un setup già presente su disco o su un percorso di rete."""
+        try:
+            total_size = source_path.stat().st_size
+            chunk_size = 1024 * 1024
+            downloaded = 0
+            start_time = time.time()
 
-                if not self._is_cancelled:
-                    self.finished.emit(str(target_path))
-                return
-            except Exception as e:
-                self.error.emit(f"Errore copia rete: {e}")
-                return
+            with source_path.open("rb") as fsrc, target_path.open("wb") as fdst:
+                while not self._is_cancelled:
+                    buf = fsrc.read(chunk_size)
+                    if not buf:
+                        break
+                    fdst.write(buf)
+                    downloaded += len(buf)
+                    elapsed = time.time() - start_time
+                    speed = downloaded / elapsed if elapsed > 0 else 0
+                    self.progress.emit(downloaded, total_size, speed)
 
-        # Caso 2: URL WEB (Netlify)
+            if not self._is_cancelled:
+                self.finished.emit(str(target_path))
+        except Exception as e:
+            self.error.emit(f"Errore copia rete: {e}")
+
+    def _download_from_web(self, target_path: Path) -> None:
+        """Scarica il setup da URL, riprendendo dal byte già scritto."""
         downloaded = target_path.stat().st_size if target_path.exists() else 0
         total_size = 0
         retries = 0
@@ -91,55 +94,88 @@ class DownloadWorker(QThread):
 
         while not self._is_cancelled:
             try:
-                headers = {"Range": f"bytes={downloaded}-"} if downloaded > 0 else {}
-                session = requests.Session()
-                response = session.get(self.source, headers=headers, stream=True, timeout=(10, 30))
-
-                if downloaded > 0 and response.status_code != 206:
-                    downloaded = 0
-                    with target_path.open("wb") as f:
-                        pass
-
-                if response.status_code not in (200, 206):
-                    if response.status_code == 416 and total_size > 0 and downloaded >= total_size:
-                        self.finished.emit(str(target_path))
-                        return
-                    raise Exception(f"Server error: {response.status_code}")
-
-                if downloaded == 0:
-                    total_size = int(response.headers.get("content-length", 0))
-                elif "Content-Range" in response.headers:
-                    total_size = int(response.headers["Content-Range"].split("/")[-1])
-
-                mode = "ab" if downloaded > 0 else "wb"
-                with target_path.open(mode) as f:
-                    content_iterator = response.iter_content(chunk_size=131072)
-                    while True:
-                        if self._is_cancelled:
-                            return
-                        try:
-                            chunk = next(content_iterator)
-                            if chunk:
-                                f.write(chunk)
-                                downloaded += len(chunk)
-                                elapsed = time.time() - start_time
-                                speed = downloaded / elapsed if elapsed > 0 else 0
-                                self.progress.emit(downloaded, total_size, speed)
-                                retries = 0
-                        except StopIteration:
-                            break
-
-                if total_size > 0 and downloaded >= total_size:
+                already_downloaded = downloaded
+                downloaded, total_size, complete = self._fetch_web_chunk(
+                    target_path, downloaded, total_size, start_time
+                )
+                if self._is_cancelled:
+                    return
+                if downloaded > already_downloaded:
+                    retries = 0
+                if complete:
                     self.finished.emit(str(target_path))
                     return
                 raise requests.exceptions.ConnectionError("Stream interrotto")
-
             except Exception:
                 if self._is_cancelled:
                     return
                 retries += 1
                 self.retrying.emit(retries)
                 time.sleep(min(retries * 2, 10))
+
+    def _fetch_web_chunk(
+        self, target_path: Path, downloaded: int, total_size: int, start_time: float
+    ) -> tuple[int, int, bool]:
+        """Legge una risposta HTTP. Il terzo valore dice se il file è completo."""
+        headers = {"Range": f"bytes={downloaded}-"} if downloaded > 0 else {}
+        response = requests.Session().get(self.source, headers=headers, stream=True, timeout=(10, 30))
+        downloaded, accepted = self._accept_download_response(response, target_path, downloaded, total_size)
+        if accepted is None:
+            return downloaded, total_size, True
+        if not accepted:
+            raise Exception(f"Server error: {response.status_code}")
+        total_size = self._read_total_size(response, downloaded, total_size)
+        downloaded = self._write_response_body(response, target_path, downloaded, total_size, start_time)
+        return downloaded, total_size, total_size > 0 and downloaded >= total_size
+
+    def _accept_download_response(
+        self, response: requests.Response, target_path: Path, downloaded: int, total_size: int
+    ) -> tuple[int, bool | None]:
+        """Allinea il file locale allo status HTTP. None indica file già completo."""
+        if downloaded > 0 and response.status_code != 206:
+            downloaded = 0
+            with target_path.open("wb"):
+                pass
+        if response.status_code not in (200, 206):
+            if response.status_code == 416 and total_size > 0 and downloaded >= total_size:
+                return downloaded, None
+            return downloaded, False
+        return downloaded, True
+
+    @staticmethod
+    def _read_total_size(response: requests.Response, downloaded: int, total_size: int) -> int:
+        """Ricava la dimensione totale da Content-Length o Content-Range."""
+        if downloaded == 0:
+            return int(response.headers.get("content-length", 0))
+        if "Content-Range" in response.headers:
+            return int(response.headers["Content-Range"].split("/")[-1])
+        return total_size
+
+    def _write_response_body(
+        self,
+        response: requests.Response,
+        target_path: Path,
+        downloaded: int,
+        total_size: int,
+        start_time: float,
+    ) -> int:
+        """Scrive il corpo della risposta e aggiorna il progresso."""
+        mode = "ab" if downloaded > 0 else "wb"
+        with target_path.open(mode) as handle:
+            content_iterator = response.iter_content(chunk_size=131072)
+            while not self._is_cancelled:
+                try:
+                    chunk = next(content_iterator)
+                except StopIteration:
+                    break
+                if not chunk:
+                    continue
+                handle.write(chunk)
+                downloaded += len(chunk)
+                elapsed = time.time() - start_time
+                speed = downloaded / elapsed if elapsed > 0 else 0
+                self.progress.emit(downloaded, total_size, speed)
+        return downloaded
 
 
 class UpdateProgressDialog(QDialog):

@@ -21,11 +21,13 @@ Prima di considerare chiuso un task, aggiornare `wiki/isab/` se è cambiato alme
 
 Aggiornare `wiki/isab/INDEX.md` se nasce un nodo. Aggiornare `wiki/INDEX.md` solo se cambia il layout delle sezioni. Aggiornare il `GEMINI.md` dell’area se cambia l’entrypoint o il file da leggere per primo.
 
+Se `scripts/check_wiki_sync.py` avvisa, la pagina del modulo elencato si aggiorna nello stesso task. Non serve una richiesta dell’utente. La pagina dice il comportamento cambiato.
+
 ## Checklist
 
 - [ ] Boot letto.
 - [ ] Modifica limitata al comportamento chiesto.
 - [ ] Test già presente sul codice toccato eseguito. Se è rosso, correzione nel codice appena toccato o nel test.
 - [ ] Wiki e `GEMINI.md` allineati al codice.
-- [ ] `.venv\Scripts\python.exe scripts\check_wiki_sync.py` letto. Esce sempre con 0. Se avvisa e il cambiamento è in questo elenco, la wiki manca ancora. Un avviso su un ritocco interno che non è in elenco si può lasciare.
+- [ ] `.venv\Scripts\python.exe scripts\check_wiki_sync.py` letto. Esce sempre con 0. Se avvisa, la pagina del modulo è aggiornata nello stesso task.
 - [ ] Nessun segreto, HWID, UNC o IP nuovo nei file aggiunti.

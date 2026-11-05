@@ -340,11 +340,8 @@ class UnknownFilesReviewDialog(QDialog):
             PdfSplitter.split_and_save(doc, page_groups, self.rules, output_dir, self.odc)
             doc.close()
 
-            # Elimina il file sconosciuto locale
-            import os
-
             try:
-                os.remove(pdf_path)
+                Path(pdf_path).unlink()
             except Exception as e:
                 logger.error(f"Impossibile eliminare {pdf_path}: {e}")
 

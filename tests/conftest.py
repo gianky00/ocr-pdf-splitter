@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 
 # CRITICAL: Initialize QApplication BEFORE any tests or modules are imported.
 # PySide6 will throw memory access violations or segmentation faults if QFont or QIcon
-# are instatiated at the module level (e.g. in theme.py) before QApplication exists.
+# are instantiated at the module level (e.g. in theme.py) before QApplication exists.
 from PySide6.QtWidgets import QApplication
 
 _app = QApplication.instance()

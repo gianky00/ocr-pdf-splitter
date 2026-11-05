@@ -7,6 +7,7 @@ import contextlib
 import os
 import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import pymupdf as fitz
@@ -59,7 +60,7 @@ class PdfSplitter:
 
             path = os.path.join(output_dir, filename)
 
-            if os.path.exists(path):
+            if Path(path).exists():
                 new_pdf = fitz.open(path)
             else:
                 new_pdf = fitz.open()
@@ -113,15 +114,15 @@ class PdfSplitter:
             doc.close()
 
         if not saved_to_temp:
-            if os.path.exists(temp_path):
+            if Path(temp_path).exists():
                 with contextlib.suppress(Exception):
-                    os.remove(temp_path)
+                    Path(temp_path).unlink()
             return False
 
         # Ora possiamo sovrascrivere il file in modo sicuro (senza PermissionError di file aperto)
         for _i in range(retries):
             try:
-                if os.path.exists(path):
+                if Path(path).exists():
                     os.replace(temp_path, path)
                 else:
                     os.rename(temp_path, path)
@@ -131,7 +132,7 @@ class PdfSplitter:
             except Exception:
                 break
 
-        if os.path.exists(temp_path):
+        if Path(temp_path).exists():
             with contextlib.suppress(Exception):
-                os.remove(temp_path)
+                Path(temp_path).unlink()
         return False

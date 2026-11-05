@@ -26,6 +26,8 @@ Non copiare salt, iterazioni, payload o HWID nella wiki. Il sorgente è la fonte
 
 `app_updater.py` confronta la versione in `src/version.py` con il canale web (`version.UPDATE_URL`) e con il canale di rete (`version.NETWORK_UPDATE_PATH`). Privilegia la LAN quando entrambe hanno un setup. L’installer scelto può restare in `_pending_installer_path` ed essere eseguito alla chiusura.
 
+`DownloadWorker` copia un setup già presente su disco o in rete. Un URL viene scaricato e può riprendere dal byte già scritto.
+
 Non riscrivere path UNC o IP nei documenti: citare i simboli.
 
 ## Log

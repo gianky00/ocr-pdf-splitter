@@ -304,7 +304,7 @@ class MainApp(QMainWindow):
         self.controller.rules_updated.connect(self._refresh_rules_tree)
         self.controller.license_status_updated.connect(self.on_license_status_updated)
 
-    def add_log_message(self, message: str, level: str = "INFO", replace_last: bool = False) -> None:
+    def add_log_message(self, message: str, level: str = "INFO") -> None:
         """Aggiunge un messaggio formattato nell'area log della Dashboard."""
         if hasattr(self, "log_area"):
             # DashboardTab imposta self.main_app.log_area durante l'inizializzazione

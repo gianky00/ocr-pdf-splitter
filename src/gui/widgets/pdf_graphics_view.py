@@ -160,7 +160,7 @@ class ROIGraphicsView(QGraphicsView):
     def clear_rois(self) -> None:
         """Rimuove le ROI disegnate e lascia la pagina PDF."""
         scene = self.scene()
-        for item in list(self._roi_items):
+        for item in self._roi_items.copy():
             try:
                 if scene is not None and item.scene() is scene:
                     scene.removeItem(item)

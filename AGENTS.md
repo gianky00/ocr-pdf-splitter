@@ -32,7 +32,7 @@ Superpowers (Cursor e Codex): all’inizio di ogni prompt, dopo il boot wiki e p
 | Licenza | Cartella `Licenza/` fuori da git. Non loggare payload, chiavi o HWID reali |
 | Segreti | Non introdurre credenziali, UNC o IP interni in codice nuovo, wiki o log. I percorsi di rete già nel sorgente si citano per simbolo (`version.NETWORK_UPDATE_PATH`, `version.UPDATE_URL`) |
 | Test | Se il codice toccato ha già un test, eseguirlo. `tests/conftest.py` crea `QApplication` prima degli import GUI |
-| Wiki-sync | Se cambi un `.py` in `src/`, esegui `.venv\Scripts\python.exe scripts\check_wiki_sync.py`. Esce con 0. L’avviso è obbligatorio da chiudere solo per i casi in [`wiki/isab/workflows/pre_commit_wiki_protocol.md`](wiki/isab/workflows/pre_commit_wiki_protocol.md) |
+| Wiki-sync | Se cambi un `.py` in `src/`, esegui `.venv\Scripts\python.exe scripts\check_wiki_sync.py`. Esce con 0. Se avvisa, aggiorna nello stesso task la pagina del modulo, senza chiedere. Protocollo: [`wiki/isab/workflows/pre_commit_wiki_protocol.md`](wiki/isab/workflows/pre_commit_wiki_protocol.md) |
 | Commit | Solo se l’utente lo chiede |
 
 ## Stack

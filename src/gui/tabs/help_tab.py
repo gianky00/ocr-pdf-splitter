@@ -104,7 +104,7 @@ class HelpTab(QWidget):
                 "• RECUPERA SESSIONE: Se l'app si chiude accidentalmente durante un lavoro, al riavvio "
                 "potrai riprendere esattamente da dove avevi interrotto.\n\n"
                 "• REVISIONE MANUALE: Le pagine non riconosciute automaticamente vengono isolate. "
-                "Al termine del processo si aprirà un'interfaccia dedicata per rinominarle o scartarle manualmentee."
+                "Al termine del processo si aprirà un'interfaccia dedicata per rinominarle o scartarle manualmente."
             ),
         }
 
@@ -114,7 +114,7 @@ class HelpTab(QWidget):
         self.help_topics_list.currentItemChanged.connect(self._on_help_topic_select)
         self.help_topics_list.setCurrentRow(0)
 
-    def _on_help_topic_select(self, current: Any, previous: Any = None) -> None:
+    def _on_help_topic_select(self, current: Any) -> None:
         """Gestisce il cambio di topic nella guida."""
         if current and hasattr(current, "text"):
             self.help_detail_text.setPlainText(self.help_data.get(current.text(), ""))

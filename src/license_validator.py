@@ -54,14 +54,17 @@ def _query_powershell(command: str) -> str:
     startupinfo = subprocess.STARTUPINFO()
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     startupinfo.wShowWindow = subprocess.SW_HIDE
-    output = subprocess.check_output(  # nosec B603
-        [_powershell_executable(), "-NoProfile", "-Command", command],
-        stderr=subprocess.DEVNULL,
-        shell=False,
-        startupinfo=startupinfo,
-        creationflags=subprocess.CREATE_NO_WINDOW,
+    return (
+        subprocess.check_output(  # nosec B603
+            [_powershell_executable(), "-NoProfile", "-Command", command],
+            stderr=subprocess.DEVNULL,
+            shell=False,
+            startupinfo=startupinfo,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        .decode()
+        .strip()
     )
-    return output.decode().strip()
 
 
 def _decrypt_with_hwid(encrypted_bytes: bytes, hw_id: str) -> dict | None:
@@ -73,9 +76,7 @@ def _decrypt_with_hwid(encrypted_bytes: bytes, hw_id: str) -> dict | None:
         data = json.loads(decrypted_data.decode("utf-8"))
     except Exception:
         return None
-    if isinstance(data, dict):
-        return data
-    return None
+    return data if isinstance(data, dict) else None
 
 
 def get_all_hardware_ids() -> list[str]:
