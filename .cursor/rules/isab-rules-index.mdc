@@ -1,0 +1,26 @@
+---
+description: Indice regole Cursor — vincoli always-on e glob, conoscenza in wiki
+alwaysApply: true
+---
+
+# ISAB — regola vs wiki
+
+Wiki + `GEMINI.md` = conoscenza. Le `.mdc` = vincoli. Se divergono, vince il codice e si aggiorna la wiki.
+
+## Always-on
+
+| Regola | Solo questo |
+|--------|-------------|
+| `agents-wiki-boot` | Boot e wiki-sync |
+| `isab-agent-guidance` | Diff, test, Windows, segreti, thread GUI |
+| `lingua-italiano` | Risposte in italiano |
+| `superpowers-invoke` | Skill Superpowers del plugin |
+| `isab-rules-index` | Questa mappa |
+
+## Glob
+
+| Regola | Trigger |
+|--------|---------|
+| `python-pyside` | `src/**/*.py` |
+
+Catalogo esteso: `wiki/isab/workflows/cursor_rules.md`.

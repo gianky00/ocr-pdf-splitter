@@ -127,12 +127,8 @@ class AppController(QObject):
             self.log_received.emit("Nessun file PDF trovato nei percorsi indicati", "WARNING", False)
 
     def start_processing(self, odc: str) -> bool:
-        """Avvia il workflow di elaborazione threadata previa verifica licenza."""
+        """Avvia il workflow di elaborazione threadata. La licenza è già stata verificata all'avvio."""
         if self._is_processing or not self.pdf_files:
-            return False
-
-        self.log_received.emit("Verifica autorizzazioni in corso...", "INFO", False)
-        if not self.check_license_online(silent=True):
             return False
 
         self._is_processing = True

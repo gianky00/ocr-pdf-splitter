@@ -3,13 +3,20 @@ Unit tests for license_validator.py.
 """
 
 import json
+import subprocess
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from cryptography.fernet import Fernet
 
-from license_validator import derive_license_key, get_hardware_id, get_license_info, verify_license
+from license_validator import (
+    _query_powershell,
+    derive_license_key,
+    get_hardware_id,
+    get_license_info,
+    verify_license,
+)
 
 
 class TestLicenseValidator(unittest.TestCase):
@@ -49,6 +56,18 @@ class TestLicenseValidator(unittest.TestCase):
         hwid = get_hardware_id()
         # Normalizzazione: rimuove '.' e trimma/maiuscolo
         self.assertEqual(hwid, "XYZ123")
+
+    @patch("subprocess.check_output", return_value=b"ABC123\n")
+    def test_query_powershell_nasconde_la_console(self, mock_sub):
+        """La query HWID non deve aprire una finestra di console."""
+        _query_powershell("Get-CimInstance -Class Win32_DiskDrive")
+        kwargs = mock_sub.call_args.kwargs
+        flags = kwargs.get("creationflags", 0)
+        self.assertTrue(flags & subprocess.CREATE_NO_WINDOW)
+        info = kwargs.get("startupinfo")
+        self.assertIsNotNone(info)
+        self.assertTrue(info.dwFlags & subprocess.STARTF_USESHOWWINDOW)
+        self.assertEqual(info.wShowWindow, subprocess.SW_HIDE)
 
     @patch("license_validator._get_license_paths")
     @patch("license_validator.get_all_hardware_ids")

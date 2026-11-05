@@ -48,13 +48,28 @@ class TestAppController(unittest.TestCase):
         mock_slot.assert_called_once()
 
     @patch("core.app_controller.ProcessingWorker")
-    @patch("core.app_controller.license_validator.verify_license", return_value=(True, "OK"))
-    def test_start_processing(self, mock_verify, mock_worker) -> None:
+    def test_start_processing(self, mock_worker) -> None:
         """Test starting the processing worker."""
         self.controller.pdf_files = ["test.pdf"]
-        with patch.object(self.controller, "check_license_online", return_value=True):
+        res = self.controller.start_processing("ODC123")
+        self.assertTrue(res)
+
+    @patch("core.app_controller.ProcessingWorker")
+    def test_start_processing_non_controlla_la_licenza(self, mock_worker) -> None:
+        """L'avvio elaborazione non ricontrolla la licenza: il controllo resta all'avvio."""
+        self.controller.pdf_files = ["test.pdf"]
+        messages: list[str] = []
+        self.controller.log_received.connect(lambda msg, _level, _replace: messages.append(msg))
+        with (
+            patch.object(self.controller, "check_license_online") as online,
+            patch.object(self.controller, "check_license") as local,
+        ):
             res = self.controller.start_processing("ODC123")
-            self.assertTrue(res)
+        self.assertTrue(res)
+        online.assert_not_called()
+        local.assert_not_called()
+        self.assertNotIn("Verifica autorizzazioni in corso...", messages)
+        mock_worker.return_value.start.assert_called_once()
 
     def test_process_log_queue(self) -> None:
         """Test log queue processing."""

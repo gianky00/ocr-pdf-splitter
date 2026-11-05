@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": [
+    {
+      "name": "isab-rules",
+      "canonical": ".agents/skills/isab-rules",
+      "mirrors": [".cursor/skills/isab-rules"]
+    },
+    {
+      "name": "isab-elaborazione",
+      "canonical": ".agents/skills/isab-elaborazione",
+      "mirrors": [".cursor/skills/isab-elaborazione"]
+    },
+    {
+      "name": "isab-ui",
+      "canonical": ".agents/skills/isab-ui",
+      "mirrors": [".cursor/skills/isab-ui"]
+    }
+  ]
+}

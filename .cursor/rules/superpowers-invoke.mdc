@@ -1,0 +1,24 @@
+---
+description: Invoca da solo le skill Superpowers quando il task le richiede
+alwaysApply: true
+---
+
+# Superpowers — invocazione autonoma
+
+All’inizio di ogni prompt, dopo il boot wiki e prima di chiarimenti, esplorazione o edit: confronta il task con le skill del plugin Superpowers installato. Se una si applica, leggi il suo `SKILL.md` corrente e seguilo. Dillo in una riga: «Uso [skill] per [scopo]».
+
+| Task | Skill |
+|------|--------|
+| Feature o comportamento nuovo | `brainstorming` prima di plan mode |
+| Piano scritto da eseguire | `writing-plans` / `executing-plans` / `subagent-driven-development` |
+| Bug, test rosso, comportamento inatteso | `systematic-debugging` |
+| Implementazione o bugfix | `test-driven-development` |
+| Task paralleli indipendenti | `dispatching-parallel-agents` |
+| Prima di dire che è fatto | `verification-before-completion` |
+| Review chiesta o ricevuta | `requesting-code-review` / `receiving-code-review` |
+| Isolare il lavoro o chiudere il branch | `using-git-worktrees` / `finishing-a-development-branch` |
+| Scrivere o modificare una skill | `writing-skills` |
+
+Istruzioni esplicite, `AGENTS.md` e la wiki vincono sulla skill. Niente worktree, branch, commit, push o PR se l’utente non li ha chiesti.
+
+Sul dominio di questo repo carica anche la skill di progetto: `isab-rules`, e `isab-elaborazione` o `isab-ui` se il task tocca pipeline o GUI.

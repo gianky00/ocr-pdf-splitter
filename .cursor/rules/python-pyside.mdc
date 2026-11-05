@@ -1,0 +1,13 @@
+---
+description: Python PySide6 — dove sta la logica e cosa non fare nel sorgente
+globs: src/**/*.py
+alwaysApply: false
+---
+
+# Python / PySide6
+
+- La pipeline PDF sta in `core.pdf_processor.process_pdf`. La view in `main.py` e `gui/` riceve `Signal`.
+- Il match pagina è `_analyze_single_page_standalone`. Non instradare lo split su `DocumentClassifier.classify_text`.
+- Config e sessione passano da `config_manager` e `SessionManager`. Niente path APPDATA scritti a mano.
+- Errori di dominio: loggare con il logger del modulo e restituire il contratto già usato (`(ok, messaggio, generated, moved_path)` per `process_pdf`; `False` per i CRUD regole). Non introdurre una gerarchia di eccezioni nuova in un fix locale.
+- Dettaglio: `src/core/GEMINI.md` o `src/gui/GEMINI.md`. Non ricavare il flusso da questa regola.

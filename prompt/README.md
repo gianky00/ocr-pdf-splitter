@@ -1,5 +1,9 @@
 # Prompt di Quality & Refactoring
 
+Questi file sono campagne generiche di qualità. Non sono la mappa del programma.
+
+Per lavorare sul repository: [`../AGENTS.md`](../AGENTS.md) → [`../wiki/INDEX.md`](../wiki/INDEX.md) → [`../wiki/isab/INDEX.md`](../wiki/isab/INDEX.md). Comandi: [`../docs/GEMINI.md`](../docs/GEMINI.md).
+
 > **Origine**: Prompt generici presi da un altro progetto, adattabili a qualsiasi progetto Python.
 > **Adattamento**: Il `pyproject.toml` nella root del progetto contiene già la configurazione specifica.
 
@@ -19,5 +23,5 @@
 - **Framework GUI**: PySide6 (migrato da Tkinter nella v2.1.0)
 - **Stubs mancanti**: `pymupdf`, `pytesseract` → override mypy in `pyproject.toml`
 - **Security-sensitive**: `license_validator.py`, `license_updater.py`, `config.dat`
-- **Test PySide6**: Necessario `@pytest.fixture` per `QApplication` nei test GUI
+- **Test PySide6**: `tests/conftest.py` crea `QApplication` prima degli import GUI
 - **Comandi Windows**: Usare PowerShell (`$env:PYTHONUTF8 = "1"`)

@@ -1,0 +1,18 @@
+---
+description: Vincoli operativi ISAB — diff, test, Windows, segreti, thread GUI
+alwaysApply: true
+---
+
+# ISAB — guida agente
+
+La conoscenza sta in `wiki/isab/` e nei `GEMINI.md`. Questa regola non la ripete.
+
+- Diff minimo. Leggere il codice attorno al punto toccato prima di modificarlo.
+- Se esiste un test sul codice toccato, eseguirlo con `.venv\Scripts\python.exe -m pytest tests\<file>.py -q`. Un fallimento si corregge nel codice appena toccato o nel test.
+- Se cambi un `.py` in `src/`, esegui `.venv\Scripts\python.exe scripts\check_wiki_sync.py`. Codice 0 sempre. Un avviso va chiuso quando il protocollo `wiki/isab/workflows/pre_commit_wiki_protocol.md` elenca quel cambiamento.
+- PowerShell. Un comando per chiamata. Python del repo: `.venv\Scripts\python.exe`.
+- OCR e split restano in `ProcessingWorker`. Niente `process_pdf` sul thread Qt.
+- Non committare `config.json` di APPDATA, `Licenza/`, log o `.venv`.
+- Non scrivere credenziali, HWID, UNC o IP interni in file nuovi. Citare `version.UPDATE_URL` e `version.NETWORK_UPDATE_PATH`.
+- Commit, push, PR e branch solo se l’utente li chiede.
+- Import di `gui.theme` solo dopo `QApplication` (già fatto in `tests/conftest.py`).

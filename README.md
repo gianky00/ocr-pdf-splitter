@@ -1,9 +1,8 @@
-# Intelleo PDF Splitter v2.0
+# Intelleo PDF Splitter
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-green.svg)
+![Python](https://img.shields.io/badge/python-3.10+-green.svg)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
 
 **Applicazione professionale per la divisione automatica di PDF basata su OCR**
@@ -32,7 +31,7 @@ Intelleo PDF Splitter è un'applicazione desktop Windows che permette di divider
 ### Requisiti
 
 - **Windows 10/11**
-- **Python 3.8+**
+- **Python 3.10+**
 - **Tesseract OCR** - [Download](https://github.com/UB-Mannheim/tesseract/wiki)
 
 ### Setup Rapido
@@ -79,7 +78,7 @@ Ogni regola di classificazione definisce:
 
 ### 3️⃣ Elaborazione PDF
 
-1. Vai nella tab **Elaborazione**
+1. Vai nella tab **Dashboard**
 2. Inserisci il **Codice ODC**
 3. **Trascina** i file PDF oppure clicca su **Seleziona PDF**
 4. L'elaborazione parte automaticamente
@@ -107,21 +106,21 @@ Ogni regola di classificazione definisce:
 
 ```
 rilevamento-allegati-isab/
-├── main.py              # Applicazione principale
-├── roi_utility.py       # Utility gestione ROI
-├── pdf_processor.py     # Logica elaborazione PDF
-├── config_manager.py    # Gestione configurazione
-├── license_validator.py # Validazione licenza
-├── license_updater.py   # Aggiornamento licenza
-├── app_updater.py       # Controllo aggiornamenti app
-├── version.py           # Versione applicazione
-├── config.json          # Configurazione utente
-├── requirements.txt     # Dipendenze Python
-├── launch.bat           # Script avvio
-├── restart.bat          # Reset ambiente
-├── Licenza/             # File licenza (non in git)
-└── tests/               # Test automatizzati
+├── launch.bat                 # Crea .venv, installa src/requirements.txt, avvia l'app
+├── src/
+│   ├── app_launcher.py        # Entrypoint
+│   ├── main.py                # Finestra principale
+│   ├── version.py             # Versione applicativa
+│   ├── core/                  # Pipeline PDF, OCR, regole, sessione
+│   ├── gui/                   # Tab, dialoghi, tema PySide6
+│   └── requirements.txt
+├── tests/
+├── wiki/                      # Mappa per gli agenti
+├── docs/GEMINI.md             # Comandi e rilascio
+└── Licenza/                   # File licenza (non in git)
 ```
+
+La config di lavoro non è il `config.json` della root: sta in `%APPDATA%\Intelleo PDF Splitter\`. La versione numerica è `src/version.py`. L'avvio è `src/app_launcher.py`.
 
 ---
 
@@ -129,10 +128,10 @@ rilevamento-allegati-isab/
 
 | Pacchetto | Descrizione |
 |-----------|-------------|
+| `PySide6` | Interfaccia |
 | `PyMuPDF` | Elaborazione PDF |
 | `Pillow` | Manipolazione immagini |
 | `pytesseract` | Wrapper Tesseract OCR |
-| `tkinterdnd2` | Drag & Drop per Tkinter |
 | `cryptography` | Gestione licenze |
 | `requests` | Comunicazione HTTP |
 | `packaging` | Gestione versioni |
@@ -147,6 +146,10 @@ La licenza è vincolata all'Hardware ID della macchina.
 Per richiedere una licenza, contattare il supporto tecnico Intelleo.
 
 ---
+
+## Agenti IA
+
+Boot: [`AGENTS.md`](AGENTS.md) → [`wiki/INDEX.md`](wiki/INDEX.md) → [`wiki/isab/INDEX.md`](wiki/isab/INDEX.md). Comandi e rilascio: [`docs/GEMINI.md`](docs/GEMINI.md).
 
 ## 📞 Supporto
 

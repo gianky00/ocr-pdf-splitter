@@ -1,0 +1,17 @@
+---
+description: Boot obbligatorio AGENTS.md → wiki + wiki-sync
+alwaysApply: true
+---
+
+# ISAB — boot + wiki sync
+
+Prima di agire, una sola volta per prompt:
+
+1. `AGENTS.md`
+2. `wiki/INDEX.md` → `wiki/isab/INDEX.md`
+3. Nodo del dominio in `wiki/isab/` e il `GEMINI.md` dell’area (`src/core`, `src/gui`, `src/shared` o `src/GEMINI.md`)
+4. Comandi e percorsi solo in `docs/GEMINI.md`
+
+Wiki-sync prima di chiudere se cambi pipeline, contratto regole/ROI, segnali o tab, dati di runtime, o protocolli agente. Protocollo: `wiki/isab/workflows/pre_commit_wiki_protocol.md`.
+
+Diff, test, segreti e thread GUI stanno nella regola `isab-agent-guidance`.

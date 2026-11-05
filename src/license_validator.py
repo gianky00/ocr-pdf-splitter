@@ -50,11 +50,16 @@ def _powershell_executable() -> str:
 
 
 def _query_powershell(command: str) -> str:
-    """Esegue un comando PowerShell fisso, senza shell."""
+    """Esegue un comando PowerShell fisso, senza shell e senza finestra di console."""
+    startupinfo = subprocess.STARTUPINFO()
+    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.wShowWindow = subprocess.SW_HIDE
     output = subprocess.check_output(  # nosec B603
         [_powershell_executable(), "-NoProfile", "-Command", command],
         stderr=subprocess.DEVNULL,
         shell=False,
+        startupinfo=startupinfo,
+        creationflags=subprocess.CREATE_NO_WINDOW,
     )
     return output.decode().strip()
 
