@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node 'c:\\Users\\Coemi\\Desktop\\SCRIPT\\rilevamento-allegati-isab\\.codex\\hooks\\session_start.cjs'",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
