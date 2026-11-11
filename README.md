@@ -1,161 +1,79 @@
-# Intelleo PDF Splitter v2.0
+# OCR PDF Splitter & Document Classifier
 
-<div align="center">
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
+![OCR](https://img.shields.io/badge/OCR-Tesseract%20%7C%20PyMuPDF-0284C7?style=flat-square)
+![Platform](https://img.shields.io/badge/Platform-Windows%20Desktop-0F172A?style=flat-square)
+![Quality](https://img.shields.io/badge/Quality-Ruff%20%7C%20MyPy%20%7C%20Pytest-16A34A?style=flat-square)
 
-![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
-![Python](https://img.shields.io/badge/python-3.8+-green.svg)
-![Platform](https://img.shields.io/badge/platform-Windows-lightgrey.svg)
-
-**Applicazione professionale per la divisione automatica di PDF basata su OCR**
-
-</div>
+Applicazione desktop di **Document Intelligence** progettata per analizzare, classificare e dividere automaticamente fascicoli **PDF multipagina** non strutturati (consuntivi, rapportini tecnici, allegati di commessa, certificazioni) tramite **Optical Character Recognition (OCR)** su **Regioni di Interesse (ROI)** configurabili visivamente.
 
 ---
 
-## 📋 Descrizione
+## Architettura & Funzionalità Principali
 
-Intelleo PDF Splitter è un'applicazione desktop Windows che permette di dividere automaticamente documenti PDF multipagina in base al contenuto riconosciuto tramite OCR (Optical Character Recognition).
-
-### Funzionalità Principali
-
-- 🔍 **Riconoscimento OCR** - Analisi automatica del contenuto delle pagine
-- 📂 **Classificazione Intelligente** - Smistamento pagine in base a regole configurabili
-- 🎯 **Aree ROI Personalizzabili** - Definizione visuale delle zone di ricerca
-- 📊 **Dashboard Integrata** - Monitoraggio stato, statistiche e attività
-- 🔄 **Drag & Drop** - Trascinamento diretto di file e cartelle
-- 📝 **Revisione Manuale** - Interfaccia per gestire file non riconosciuti
+- **Motore OCR Basato su ROI (`ocr_engine.py` & `roi_manager.py`):** Invece di processare l'intera pagina, l'applicazione estrae e sottopone a **Tesseract OCR** esclusivamente le coordinate rettangolari (ROI) definite dall'utente, massimizzando la precisione di lettura e riducendo drasticamente i tempi di elaborazione.
+- **Editor Visuale delle Zone di Ricerca (`roi_controller.py`):** Interfaccia grafica interattiva con zoom e anteprima ad alta risoluzione (`PyMuPDF` + `Pillow`) per disegnare i riquadri di lettura direttamente su un documento PDF campione.
+- **Classificazione Deterministica a Regole (`classifier.py` & `rule_service.py`):** Smistamento automatico delle singole pagine in base a parole chiave, codici documento e pattern associati a ciascuna categoria, con raggruppamento e generazione automatica dei file di output.
+- **Elaborazione Multi-Thread & Drag-and-Drop (`processing_worker.py`):** Coda di lavorazione asincrona per processare interi lotti di documenti PDF senza bloccare l'interfaccia utente.
+- **Interfaccia di Revisione Assistita:** Visualizzatore integrato con scorciatoie da tastiera per ispezionare rapidamente ed assegnare eventuali pagine non riconosciute.
 
 ---
 
-## 🚀 Installazione
+## Stack Tecnologico
 
-### Requisiti
-
-- **Windows 10/11**
-- **Python 3.8+**
-- **Tesseract OCR** - [Download](https://github.com/UB-Mannheim/tesseract/wiki)
-
-### Setup Rapido
-
-1. **Clona il repository**
-   ```bash
-   git clone <repository-url>
-   cd rilevamento-allegati-isab
-   ```
-
-2. **Avvia l'applicazione**
-   ```bash
-   launch.bat
-   ```
-   Questo script creerà automaticamente l'ambiente virtuale e installerà le dipendenze.
-
-### Configurazione Tesseract
-
-Al primo avvio, configura il percorso di Tesseract:
-1. Vai nella tab **Configurazione**
-2. Clicca su **Auto-Rileva** o **Sfoglia**
-3. Seleziona `tesseract.exe` (di solito in `C:\Program Files\Tesseract-OCR\`)
+| Componente | Libreria / Tecnologia |
+| :--- | :--- |
+| **Rendering & Split PDF** | `PyMuPDF` (`fitz`) |
+| **Computer Vision & OCR** | `pytesseract` (Tesseract OCR Engine), `Pillow` (Image Preprocessing) |
+| **Interfaccia Desktop** | Python GUI con supporto Drag & Drop nativo (`tkinterdnd2`) |
+| **Qualità & Test** | `Ruff`, `MyPy`, `Pytest` |
 
 ---
 
-## 📖 Guida all'Uso
+## Struttura del Progetto
 
-### 1️⃣ Configurazione Regole
-
-Ogni regola di classificazione definisce:
-- **Nome Categoria** - Es. "consuntivo", "rapportini"
-- **Suffisso File** - Aggiunto al nome del file generato
-- **Keywords** - Parole chiave da cercare via OCR
-- **Colore** - Per identificazione visiva
-- **Aree ROI** - Zone della pagina dove cercare
-
-### 2️⃣ Definizione ROI
-
-1. Clicca su **Utility ROI** nella tab Configurazione
-2. Apri un PDF di esempio
-3. **Disegna un rettangolo** sull'area di interesse
-4. Associa la ROI a una categoria
-5. Le modifiche vengono salvate automaticamente
-
-### 3️⃣ Elaborazione PDF
-
-1. Vai nella tab **Elaborazione**
-2. Inserisci il **Codice ODC**
-3. **Trascina** i file PDF oppure clicca su **Seleziona PDF**
-4. L'elaborazione parte automaticamente
-
-### 4️⃣ Output
-
-- I PDF vengono divisi nella **stessa cartella** del file originale
-- I file originali vengono spostati in una sottocartella `ORIGINALI`
-- I file non riconosciuti possono essere rinominati manualmente
-
----
-
-## ⌨️ Scorciatoie
-
-| Tasto | Azione |
-|-------|--------|
-| `←` `→` | Navigazione pagine |
-| `↑` `↓` | Navigazione file (revisione) |
-| `Rotella mouse` | Zoom anteprima |
-| `Ctrl + Rotella` | Zoom ROI Utility |
-
----
-
-## 📁 Struttura Progetto
-
-```
+```text
 rilevamento-allegati-isab/
-├── main.py              # Applicazione principale
-├── roi_utility.py       # Utility gestione ROI
-├── pdf_processor.py     # Logica elaborazione PDF
-├── config_manager.py    # Gestione configurazione
-├── license_validator.py # Validazione licenza
-├── license_updater.py   # Aggiornamento licenza
-├── app_updater.py       # Controllo aggiornamenti app
-├── version.py           # Versione applicazione
-├── config.json          # Configurazione utente
-├── requirements.txt     # Dipendenze Python
-├── launch.bat           # Script avvio
-├── restart.bat          # Reset ambiente
-├── Licenza/             # File licenza (non in git)
-└── tests/               # Test automatizzati
+├── src/
+│   ├── core/
+│   │   ├── app_controller.py       # Coordinamento logica applicativa
+│   │   ├── ocr_engine.py           # Pipeline di pre-processing immagine ed estrazione testo OCR
+│   │   ├── pdf_processor.py        # Analisi pagine e orchestrazione del flusso
+│   │   ├── pdf_splitter.py         # Costruzione e salvataggio dei PDF suddivisi per categoria
+│   │   ├── classifier.py           # Valutazione regole di matching su testo estratto
+│   │   ├── roi_manager.py          # Gestione coordinate normalizzate delle Regioni di Interesse
+│   │   └── processing_worker.py    # Worker asincrono per elaborazione batch
+│   ├── gui/                        # Finestre, dialoghi, animazioni e utility di disegno ROI
+│   ├── app_launcher.py             # Entry point dell'applicazione
+│   └── config_manager.py           # Persistenza configurazioni e regole di smistamento
+└── pyproject.toml                  # Configurazione progetto, Ruff e MyPy
 ```
 
 ---
 
-## 🔧 Dipendenze
+## Installazione e Utilizzo
 
-| Pacchetto | Descrizione |
-|-----------|-------------|
-| `PyMuPDF` | Elaborazione PDF |
-| `Pillow` | Manipolazione immagini |
-| `pytesseract` | Wrapper Tesseract OCR |
-| `tkinterdnd2` | Drag & Drop per Tkinter |
-| `cryptography` | Gestione licenze |
-| `requests` | Comunicazione HTTP |
-| `packaging` | Gestione versioni |
+### Prerequisiti
+- **Python 3.10+**
+- **Tesseract OCR** installato sul sistema (es. `C:\Program Files\Tesseract-OCR\tesseract.exe`)
 
----
+### Avvio Rapido
 
-## 🔐 Licenza
+```powershell
+# Clona il repository
+git clone https://github.com/gianky00/rilevamento-allegati-isab.git
+cd rilevamento-allegati-isab
 
-Questo software richiede una licenza valida per funzionare.
-La licenza è vincolata all'Hardware ID della macchina.
+# Avvia lo script di setup ed esecuzione automatica
+launch.bat
+```
 
-Per richiedere una licenza, contattare il supporto tecnico Intelleo.
-
----
-
-## 📞 Supporto
-
-Per assistenza tecnica o segnalazione bug:
-- Email: supporto@intelleo.it
-- Telefono: [Inserire numero]
+### Flusso Operativo
+1. **Configurazione Regole:** Definisci le categorie documentali, il suffisso di output e le parole chiave da ricercare.
+2. **Definizione ROI:** Apri un PDF di riferimento nell'editor ROI e traccia le aree rettangolari in cui compaiono le intestazioni o i codici identificativi.
+3. **Elaborazione Batch:** Trascina i fascicoli PDF nell'area di lavoro; il sistema dividerà automaticamente gli allegati rinominandoli secondo la commessa/ODC impostata e archiviando gli originali.
 
 ---
 
-<div align="center">
-<sub>© 2024 Intelleo - Tutti i diritti riservati</sub>
-</div>
+## Autore
+Progettato e sviluppato da **Giancarlo Allegretti** — *Industrial Automation, Instrumentation & AI Software Engineering*.
