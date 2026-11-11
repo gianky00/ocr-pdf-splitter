@@ -33,7 +33,7 @@ Applicazione desktop di **Document Intelligence** progettata per analizzare, cla
 ## Struttura del Progetto
 
 ```text
-rilevamento-allegati-isab/
+ocr-pdf-splitter/
 ├── src/
 │   ├── core/
 │   │   ├── app_controller.py       # Coordinamento logica applicativa
@@ -61,8 +61,8 @@ rilevamento-allegati-isab/
 
 ```powershell
 # Clona il repository
-git clone https://github.com/gianky00/rilevamento-allegati-isab.git
-cd rilevamento-allegati-isab
+git clone https://github.com/gianky00/ocr-pdf-splitter.git
+cd ocr-pdf-splitter
 
 # Avvia lo script di setup ed esecuzione automatica
 launch.bat
