@@ -25,7 +25,7 @@ Applicazione desktop di **Document Intelligence** progettata per analizzare, cla
 | :--- | :--- |
 | **Rendering & Split PDF** | `PyMuPDF` (`fitz`) |
 | **Computer Vision & OCR** | `pytesseract` (Tesseract OCR Engine), `Pillow` (Image Preprocessing) |
-| **Interfaccia Desktop** | Python GUI con supporto Drag & Drop nativo (`tkinterdnd2`) |
+| **Interfaccia Desktop** | Python GUI con supporto Drag & Drop nativo (`PySide6`) |
 | **Qualità & Test** | `Ruff`, `MyPy`, `Pytest` |
 
 ---
